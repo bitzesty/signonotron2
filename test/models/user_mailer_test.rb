@@ -63,7 +63,7 @@ class UserMailerTest < ActionMailer::TestCase
     end
 
     should "include an instance name in the subject" do
-      assert_includes @email.subject, "Your GOV.UK Signon development account"
+      assert_match /Your .* Signon development account/, @email.subject
     end
 
     should "include an instance name in the body" do
@@ -94,7 +94,7 @@ class UserMailerTest < ActionMailer::TestCase
     end
 
     should "include the instance name in the subject" do
-      assert_includes @email.subject, "Your GOV.UK Signon test account"
+      assert_match /Your .* Signon test account/, @email.subject
     end
 
     should "include the instance name in the body" do
@@ -108,6 +108,11 @@ class UserMailerTest < ActionMailer::TestCase
       @the_time = Time.zone.now
       user = User.new(name: "User", email: "user@example.com", locked_at: @the_time)
       @email = UserMailer.unlock_instructions(user, "afaketoken")
+    end
+
+    should "address the user correctly" do
+      assert_body_includes "Hello User"
+      assert_body_includes "for user@example.com"
     end
 
     should "state when the account was locked" do

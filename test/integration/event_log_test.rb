@@ -58,6 +58,15 @@ class EventLogIntegrationTest < ActionDispatch::IntegrationTest
     assert_equal EventLog::PASSPHRASE_RESET_LOADED, @user.event_logs.first.entry
   end
 
+  test "record passphrase reset page loaded but token expired" do
+    token_received_in_email = Timecop.freeze((User.reset_password_within + 1.hour).ago) do
+      @user.send_reset_password_instructions
+    end
+    visit edit_user_password_path(reset_password_token: token_received_in_email)
+
+    assert_equal EventLog::PASSPHRASE_RESET_LOADED_BUT_TOKEN_EXPIRED, @user.event_logs.first.entry
+  end
+
   test "record passphrase reset failed" do
     token_received_in_email = @user.send_reset_password_instructions
     visit edit_user_password_path(reset_password_token: token_received_in_email)
@@ -68,6 +77,18 @@ class EventLogIntegrationTest < ActionDispatch::IntegrationTest
     assert_equal EventLog::PASSPHRASE_RESET_FAILURE, event_log.entry
     assert_match "Passphrase can't be blank", event_log.trailing_message
     assert_match "Passphrase not strong enough", event_log.trailing_message
+  end
+
+  test "record successful passphrase reset from email" do
+    token_received_in_email = @user.send_reset_password_instructions
+    visit edit_user_password_path(reset_password_token: token_received_in_email)
+
+    new_passphrase = "diagram donkey doodle"
+    fill_in "New passphrase", with: new_passphrase
+    fill_in "Confirm new passphrase", with: new_passphrase
+    click_on "Change passphrase"
+
+    assert_includes @user.event_logs.map(&:entry), EventLog::SUCCESSFUL_PASSPHRASE_RESET
   end
 
   test "record successful passphrase change" do
