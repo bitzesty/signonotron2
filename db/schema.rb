@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170816153804) do
+ActiveRecord::Schema.define(version: 20170818134716) do
 
   create_table "batch_invitation_application_permissions", force: :cascade do |t|
     t.integer  "batch_invitation_id",     limit: 4, null: false
@@ -150,6 +150,7 @@ ActiveRecord::Schema.define(version: 20170816153804) do
     t.datetime "updated_at"
     t.boolean  "delegatable",                   default: false
     t.boolean  "grantable_from_ui",             default: true,  null: false
+    t.boolean  "default",                       default: false, null: false
   end
 
   add_index "supported_permissions", ["application_id", "name"], name: "index_supported_permissions_on_application_id_and_name", unique: true, using: :btree
