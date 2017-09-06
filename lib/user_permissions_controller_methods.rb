@@ -1,15 +1,17 @@
 module UserPermissionsControllerMethods
-  private
+private
 
   def visible_applications(user)
-    applications = Doorkeeper::Application.includes(:supported_permissions)
     if user.api_user?
-      authorised_application_ids = user.authorisations.where(revoked_at: nil).pluck(:application_id)
-      visible_applications = applications.where(id: authorised_application_ids)
-    elsif current_user.superadmin? || current_user.admin?
-      visible_applications = applications
+      applications = ::Doorkeeper::Application.includes(:supported_permissions)
+      if current_user.superadmin?
+        api_user_authorised_apps = user.authorisations.where(revoked_at: nil).pluck(:application_id)
+        applications.where(id: api_user_authorised_apps)
+      else
+        applications.none
+      end
     else
-      visible_applications = applications.can_signin(current_user).with_signin_delegatable
+      policy_scope(:user_permission_manageable_application)
     end
   end
 
@@ -21,5 +23,9 @@ module UserPermissionsControllerMethods
     applications.map do |application|
       [application, user.application_permissions.where(application_id: application.id)]
     end
+  end
+
+  def all_applications_and_permissions_for(user)
+    user.supported_permissions.includes(:application).group_by(&:application)
   end
 end

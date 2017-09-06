@@ -10,7 +10,7 @@ class User < ActiveRecord::Base
   self.include_root_in_json = true
 
   SUSPENSION_THRESHOLD_PERIOD = 45.days
-  UNSUSPENSION_GRACE_PERIOD = 3.days
+  UNSUSPENSION_GRACE_PERIOD = 7.days
 
   MAX_2SV_LOGIN_ATTEMPTS = 10
   MAX_2SV_DRIFT_SECONDS = 30
@@ -28,12 +28,12 @@ class User < ActiveRecord::Base
          :recoverable, :trackable,
          :validatable, :timeoutable, :lockable, # devise core model extensions
          :invitable,    # in devise_invitable gem
-         :suspendable,  # in signonotron2/lib/devise/models/suspendable.rb
+         :suspendable,  # in signon/lib/devise/models/suspendable.rb
          :zxcvbnable,
          :encryptable,
          :confirmable,
-         :password_archivable, # in signonotron2/lib/devise/models/password_archivable.rb
-         :password_expirable   # in signonotron2/lib/devise/models/password_expirable.rb
+         :password_archivable, # in signon/lib/devise/models/password_archivable.rb
+         :password_expirable   # in signon/lib/devise/models/password_expirable.rb
 
   validates :name, presence: true
   validates :reason_for_suspension, presence: true, if: proc { |u| u.suspended? }
@@ -150,7 +150,7 @@ class User < ActiveRecord::Base
   # 1. notify suspended users that they can't reset their password, and
   # 2. handle emails blacklisted by AWS such that we conceal whether
   #    or not an account exists for that email. moved from:
-  #    https://github.com/alphagov/signonotron2/commit/451b89d9
+  #    https://github.com/alphagov/signon/commit/451b89d9
   def self.send_reset_password_instructions(attributes = {})
     user = User.find_by_email(attributes[:email])
     if user.present? && user.suspended?
@@ -166,14 +166,14 @@ class User < ActiveRecord::Base
     inviter.nil? ? :default : inviter.role.to_sym
   end
 
-  def invite!
+  def invite!(*args)
     # For us, a user is "confirmed" when they're created, even though this is
     # conceptually confusing.
     # It means that the password reset flow works when you've been invited but
     # not yet accepted.
     # Devise Invitable used to behave this way and then changed in v1.1.1
     self.confirmed_at = Time.zone.now
-    super
+    super(*args)
   end
 
   # Override Devise so that, when a user has been invited with one address

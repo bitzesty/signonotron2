@@ -1,12 +1,13 @@
 require File.expand_path('../boot', __FILE__)
 
 require 'rails/all'
+require_relative '../lib/same_site_security/middleware'
 
 # Require the gems listed in Gemfile, including any gems
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
-module Signonotron2
+module Signon
   def self.mysql?
     ENV.fetch("SIGNONOTRON2_DB_ADAPTER", "mysql") == "mysql"
   end
@@ -56,5 +57,9 @@ module Signonotron2
     config.autoload_paths << Rails.root.join('lib')
 
     config.active_job.queue_adapter = :sidekiq
+
+    config.middleware.insert_before 0, SameSiteSecurity::Middleware
+
+    config.active_record.raise_in_transactional_callbacks = true
   end
 end

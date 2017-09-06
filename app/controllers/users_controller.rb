@@ -5,6 +5,7 @@ class UsersController < ApplicationController
 
   before_filter :authenticate_user!, except: :show
   before_filter :load_and_authorize_user, except: [:index, :show]
+  before_filter :allow_no_application_access, only: [:update]
   helper_method :applications_and_permissions, :any_filter?
   respond_to :html
 
@@ -38,25 +39,15 @@ class UsersController < ApplicationController
     end
   end
 
+  def edit
+    @application_permissions = all_applications_and_permissions_for(@user)
+  end
+
   def update
-    raise Pundit::NotAuthorizedError if current_user.organisation_admin? &&
-        ! current_user.organisation.subtree.map(&:id).include?(params[:user][:organisation_id].to_i)
+    raise Pundit::NotAuthorizedError if params[:user][:organisation_id].present? && !policy(@user).assign_organisations?
 
-    @user.skip_reconfirmation!
-    if @user.update_attributes(user_params)
-      send_two_step_flag_notification(@user)
-
-      @user.application_permissions.reload
-      PermissionUpdater.perform_on(@user)
-
-      if email_change = @user.previous_changes[:email]
-        EventLog.record_email_change(@user, email_change.first, email_change.last, current_user)
-        @user.invite! if @user.invited_but_not_yet_accepted?
-        email_change.each do |to_address|
-          UserMailer.email_changed_by_admin_notification(@user, email_change.first, to_address).deliver_later
-        end
-      end
-
+    updater = UserUpdate.new(@user, user_params, current_user)
+    if updater.update
       redirect_to users_path, notice: "Updated user #{@user.email} successfully"
     else
       render :edit
@@ -116,7 +107,7 @@ class UsersController < ApplicationController
     if @user.update_with_password(password_params)
       EventLog.record_event(@user, EventLog::SUCCESSFUL_PASSPHRASE_CHANGE)
       flash[:notice] = t(:updated, scope: 'devise.passwords')
-      sign_in(@user, bypass: true)
+      bypass_sign_in(@user)
       redirect_to root_path
     else
       EventLog.record_event(@user, EventLog::UNSUCCESSFUL_PASSPHRASE_CHANGE)
@@ -204,10 +195,10 @@ class UsersController < ApplicationController
     end
   end
 
-  def send_two_step_flag_notification(user)
-    if user.send_two_step_flag_notification?
-      UserMailer.two_step_flagged(user).deliver_later
-    end
+  # When no permissions are selected for a user, we set the value to [] so
+  # a user can have no permissions
+  def allow_no_application_access
+    params[:user][:supported_permission_ids] ||= []
   end
 
   def user_params

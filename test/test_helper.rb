@@ -22,6 +22,7 @@ class ActiveSupport::TestCase
     Timecop.return
     WebMock.reset!
     DatabaseCleaner.clean
+    Mail::TestMailer.deliveries.clear
   end
 end
 
@@ -30,7 +31,7 @@ WebMock.disable_net_connect!(allow_localhost: true)
 require 'helpers/confirmation_token_helper'
 
 class ActionController::TestCase
-  include Devise::TestHelpers
+  include Devise::Test::ControllerHelpers
   include ConfirmationTokenHelper
 
   def sign_in(user)
@@ -63,6 +64,7 @@ Capybara.javascript_driver = :poltergeist
 
 require 'helpers/user_helpers'
 require 'helpers/email_helpers'
+require 'helpers/analytics_helpers'
 
 class ActiveRecord::Base
   mattr_accessor :shared_connection
@@ -81,6 +83,7 @@ class ActionDispatch::IntegrationTest
   include UserHelpers
   include EmailHelpers
   include ConfirmationTokenHelper
+  include AnalyticsHelpers
 
   def assert_response_contains(content)
     assert page.has_content?(content), "Expected to find '#{content}' in:\n#{page.text}"
@@ -120,6 +123,5 @@ class ActionDispatch::IntegrationTest
     Capybara.reset_sessions!
     Capybara.use_default_driver
     ActionController::Base.allow_forgery_protection = @original_forgery_protection_value
-    clear_emails
   end
 end
