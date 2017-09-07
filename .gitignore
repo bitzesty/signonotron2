@@ -6,6 +6,10 @@
 
 .DS_Store
 
+.idea/*
+REVISION
+*_manifest.yml
+
 # Ignore bundler config
 /.bundle
 .DS_Store
@@ -23,3 +27,6 @@
 # Simplecov
 coverage/*
 test/reports/*
+
+# RVM
+.ruby-gemset
