@@ -1,4 +1,7 @@
 class SigninRequiredAuthorizationsController < Doorkeeper::AuthorizationsController
+
+  include Pundit
+
   def new
     if pre_auth.authorizable?
       if skip_authorization? || matching_token?
