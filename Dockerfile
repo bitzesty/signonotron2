@@ -1,4 +1,4 @@
-FROM ruby:2.2.8
+FROM ruby:2.3.5
 MAINTAINER "govuk-role-platform-accounts-members@digital.cabinet-office.gov.uk"
 
 RUN apt-get update && \

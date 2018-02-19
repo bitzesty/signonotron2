@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-ruby '2.2.8'
+ruby '2.3.5'
 
 gem 'rails', '4.2.7.1'
 gem 'kaminari', '~> 0.16.3'
