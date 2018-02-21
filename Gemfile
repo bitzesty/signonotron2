@@ -44,7 +44,7 @@ gem 'unicorn', '4.9.0'
 gem 'govuk_sidekiq', '0.0.3'
 gem 'activejob-retry'
 
-gem 'redis', '3.2.1'
+gem "redis-rails"
 
 gem 'zeroclipboard-rails', '>= 0.1.2'
 
