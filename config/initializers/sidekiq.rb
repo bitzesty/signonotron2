@@ -1,15 +1,16 @@
 require "sidekiq"
 
-# PaaS Redis is not ready for prod
-if ENV['VCAP_SERVICES'].present?
-  redis_url = JSON.parse(ENV["VCAP_SERVICES"])["redis"].select{ |s| s["name"] == ENV["REDIS_INSTANCE_NAME"] }[0]["credentials"]["uri"]
+redis_url = if ENV['REDIS_URL'].present?
+  ENV["REDIS_URL"]
+elsif ENV['VCAP_SERVICES'].present?
+  JSON.parse(ENV["VCAP_SERVICES"])["redis"].select do |s|
+    s["name"] == ENV["REDIS_INSTANCE_NAME"]
+  end[0]["credentials"]["uri"]
 else
-  redis_url = ENV["REDIS_URL"]
+  ""
 end
 
-redis_db = ENV["REDIS_DB"] || 0
-
-redis_config = { url: redis_url, db: redis_db }
+redis_config = { url: redis_url }
 
 Sidekiq.configure_server do |config|
   config.redis = redis_config
