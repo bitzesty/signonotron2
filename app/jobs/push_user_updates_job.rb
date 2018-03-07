@@ -1,14 +1,26 @@
-class PushUserUpdatesJob < ActiveJob::Base
-  include ActiveJob::Retry.new(strategy: :exponential, limit: 6)
+class PushUserUpdatesJob
+  include Sidekiq::Worker
 
-  def perform(*args)
+  def perform
     raise NotImplementedError, "PushUserUpdatesJob must be subclassed"
   end
 
   class << self
     def perform_on(user)
-      user.applications_used.select(&:supports_push_updates?)
-        .each { |application| self.perform_later(user.uid, application.id) }
+      Rails.logger.info ""
+      Rails.logger.info "-" * 100
+      Rails.logger.info ""
+      Rails.logger.info "#{self.class.name}: perform_on runned"
+      Rails.logger.info ""
+      Rails.logger.info "-" * 100
+      Rails.logger.info ""
+
+      user.applications_used
+          .select(&:supports_push_updates?)
+          .each do |application|
+
+        self.perform_async(user.uid, application.id)
+      end
     end
   end
 end

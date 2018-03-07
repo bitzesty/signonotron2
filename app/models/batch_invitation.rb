@@ -24,7 +24,7 @@ class BatchInvitation < ActiveRecord::Base
 
   def enqueue
     NoisyBatchInvitation.make_noise(self).deliver_later
-    BatchInvitationJob.perform_later(self.id)
+    BatchInvitationJob.perform_async(self.id)
   end
 
   def perform(options = {})

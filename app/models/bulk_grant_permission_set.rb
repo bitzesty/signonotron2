@@ -17,7 +17,7 @@ class BulkGrantPermissionSet < ActiveRecord::Base
   end
 
   def enqueue
-    BulkGrantPermissionSetJob.perform_later(self.id)
+    BulkGrantPermissionSetJob.perform_async(self.id)
   end
 
   def perform(_options = {})
