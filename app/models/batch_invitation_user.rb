@@ -38,16 +38,16 @@ private
     if User.find_by_email(self.email)
       self.update_column(:outcome, "skipped")
     else
-      begin
+      # begin
         user = User.invite!(sanitised_attributes, inviting_user)
         if user.persisted?
           self.update_column(:outcome, "success")
         else
           self.update_column(:outcome, "failed")
         end
-      rescue StandardError => e
-        self.update_column(:outcome, "failed")
-      end
+      # rescue StandardError => e
+      #   self.update_column(:outcome, "failed")
+      # end
     end
   end
 
