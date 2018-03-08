@@ -1,4 +1,7 @@
-class TestMailer < ApplicationMailer
+class TestMailer < ActionMailer::Base
+  include MailerHelper
+
+  default from: Proc.new { email_from }
 
   def welcome(email)
     @email = email
