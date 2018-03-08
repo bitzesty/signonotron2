@@ -56,6 +56,8 @@ gem 'sprockets-rails', '~> 3.1.1'
 # This change was made via Snyk to fix a vulnerability
 gem 'uglifier', '>= 3.0.4'
 
+gem 'slim-rails'
+
 group :development do
   gem 'quiet_assets', '1.0.2'
   gem 'better_errors', '2.1.1'
