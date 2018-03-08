@@ -31,10 +31,11 @@ class BatchInvitation < ActiveRecord::Base
     self.batch_invitation_users.unprocessed.each do |bi_user|
       bi_user.invite(user, supported_permission_ids)
     end
+
     self.outcome = "success"
     self.save!
-  rescue StandardError => e
-    self.update_column(:outcome, "fail")
-    raise
+  #rescue StandardError => e
+  #  self.update_column(:outcome, "fail")
+  #  raise
   end
 end
