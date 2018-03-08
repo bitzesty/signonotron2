@@ -95,7 +95,7 @@ class UsersController < ApplicationController
       render :edit_email_or_passphrase
     elsif @user.update_attributes(email: new_email)
       EventLog.record_email_change(@user, current_email, new_email)
-      UserMailer.email_changed_notification(@user).deliver_later
+      UserMailer.email_changed_notification(@user).deliver_now
       redirect_to root_path, notice: "An email has been sent to #{new_email}. Follow the link in the email to update your address."
     else
       flash[:alert] = "Failed to change email."
@@ -117,7 +117,7 @@ class UsersController < ApplicationController
 
   def reset_two_step_verification
     @user.reset_2sv!(current_user)
-    UserMailer.two_step_reset(@user).deliver_later
+    UserMailer.two_step_reset(@user).deliver_now
 
     redirect_to :root, notice: "Reset 2-step verification for #{@user.email}"
   end

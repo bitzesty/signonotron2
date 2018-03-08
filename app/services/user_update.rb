@@ -86,7 +86,7 @@ private
 
   def send_two_step_flag_notification
     if user.send_two_step_flag_notification?
-      UserMailer.two_step_flagged(user).deliver_later
+      UserMailer.two_step_flagged(user).deliver_now
     end
   end
 
@@ -98,7 +98,7 @@ private
     user.invite! if user.invited_but_not_yet_accepted?
 
     email_change.each do |to_address|
-      UserMailer.email_changed_by_admin_notification(user, email_change.first, to_address).deliver_later
+      UserMailer.email_changed_by_admin_notification(user, email_change.first, to_address).deliver_now
     end
   end
 

@@ -40,9 +40,9 @@ class Devise::TwoStepVerificationController < DeviseController
 
   def send_notification(user, mode)
     if mode == :setup
-      UserMailer.two_step_enabled(current_user).deliver_later
+      UserMailer.two_step_enabled(current_user).deliver_now
     else
-      UserMailer.two_step_changed(current_user).deliver_later
+      UserMailer.two_step_changed(current_user).deliver_now
     end
   end
 

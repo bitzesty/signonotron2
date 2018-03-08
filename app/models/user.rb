@@ -158,7 +158,7 @@ class User < ActiveRecord::Base
   def self.send_reset_password_instructions(attributes = {})
     user = User.find_by_email(attributes[:email])
     if user.present? && user.suspended?
-      UserMailer.notify_reset_password_disallowed_due_to_suspension(user).deliver_later
+      UserMailer.notify_reset_password_disallowed_due_to_suspension(user).deliver_now
       user
     else
       super
@@ -225,7 +225,7 @@ class User < ActiveRecord::Base
 
   # Make devise send all emails using ActiveJob
   def send_devise_notification(notification, *args)
-    devise_mailer.send(notification, self, *args).deliver_later
+    devise_mailer.send(notification, self, *args).deliver_now
   end
 
   def need_two_step_verification?
