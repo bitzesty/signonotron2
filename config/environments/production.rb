@@ -86,6 +86,9 @@ Signon::Application.configure do
     host: URI.parse(Plek.current.find('signon')).host,
     protocol: 'https'
   }
+
+  config.action_mailer.delivery_method = :aws_sdk
+
   # Use default logging formatter so that PID and timestamp are not suppressed.
   config.log_formatter = ::Logger::Formatter.new
 end

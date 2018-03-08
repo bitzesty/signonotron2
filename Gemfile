@@ -58,6 +58,10 @@ gem 'uglifier', '>= 3.0.4'
 
 gem 'slim-rails'
 
+# AWS SES support
+gem "aws-sdk", "~> 2"
+gem "aws-sdk-rails", ">= 1.0.1"
+
 group :development do
   gem 'quiet_assets', '1.0.2'
   gem 'better_errors', '2.1.1'
