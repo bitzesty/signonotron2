@@ -1,5 +1,7 @@
 require "sidekiq"
 
+Sidekiq::Logging.logger.level = Logger::DEBUG
+
 redis_url = if ENV['REDIS_URL'].present?
   ENV["REDIS_URL"]
 elsif ENV['VCAP_SERVICES'].present?
