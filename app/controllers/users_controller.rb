@@ -154,11 +154,15 @@ class UsersController < ApplicationController
         @users = @users.page(params[:page]).per(100)
       end
     else
-      @users, @sorting_params = @users.alpha_paginate(
-        params.fetch(:letter, 'A'),
-        ALPHABETICAL_PAGINATE_CONFIG.dup,
-        &:name
-      )
+      @users, @sorting_params = if ActiveRecord::Base.connection.adapter_name == 'MySQL'
+        @users.alpha_paginate(
+          params.fetch(:letter, 'A'),
+          ALPHABETICAL_PAGINATE_CONFIG.dup,
+          &:name
+        )
+      else
+        [@users, {}]
+      end
     end
   end
 
