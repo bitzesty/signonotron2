@@ -2,7 +2,7 @@ require 'csv'
 
 class BatchInvitationsController < ApplicationController
   include UserPermissionsControllerMethods
-  before_filter :authenticate_user!
+  before_action :authenticate_user!
 
   helper_method :applications_and_permissions
   helper_method :recent_batch_invitations
@@ -15,6 +15,7 @@ class BatchInvitationsController < ApplicationController
   def create
     @batch_invitation = BatchInvitation.new(user: current_user, organisation_id: params[:batch_invitation][:organisation_id])
     @batch_invitation.supported_permission_ids = params[:user][:supported_permission_ids] if params[:user]
+    grant_default_permissions(@batch_invitation)
     authorize @batch_invitation
 
     unless file_uploaded?
@@ -42,7 +43,15 @@ class BatchInvitationsController < ApplicationController
 
     @batch_invitation.save
     csv.each do |row|
-      BatchInvitationUser.create(batch_invitation: @batch_invitation, name: row["Name"], email: row["Email"])
+      batch_user_args = {
+        batch_invitation: @batch_invitation,
+        name: row["Name"],
+        email: row["Email"]
+      }
+      if policy(@batch_invitation).assign_organisation_from_csv?
+        batch_user_args[:organisation_slug] = row["Organisation"]
+      end
+      BatchInvitationUser.create(batch_user_args)
     end
     @batch_invitation.enqueue
     flash[:notice] = "Scheduled invitation of #{@batch_invitation.batch_invitation_users.count} users"
@@ -68,6 +77,12 @@ class BatchInvitationsController < ApplicationController
       false
     else
       true
+    end
+  end
+
+  def grant_default_permissions(batch_invitation)
+    SupportedPermission.default.each do |default_permission|
+      batch_invitation.supported_permissions << default_permission
     end
   end
 end

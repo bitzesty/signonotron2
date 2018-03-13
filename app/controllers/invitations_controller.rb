@@ -1,7 +1,7 @@
 # https://raw.github.com/scambra/devise_invitable/master/app/controllers/devise/invitations_controller.rb
 class InvitationsController < Devise::InvitationsController
-  before_filter :authenticate_user!
-  after_filter :verify_authorized, except: [:edit, :update]
+  before_action :authenticate_user!
+  after_action :verify_authorized, except: [:edit, :update]
 
   include UserPermissionsControllerMethods
   helper_method :applications_and_permissions
@@ -26,11 +26,14 @@ class InvitationsController < Devise::InvitationsController
 
       self.resource = resource_class.invite!(resource_params, current_inviter)
       if resource.errors.empty?
+        grant_default_permissions(self.resource)
         set_flash_message :notice, :send_instructions, email: self.resource.email
         respond_with resource, location: after_invite_path_for(resource)
       else
         respond_with_navigational(resource) { render :new }
       end
+
+      EventLog.record_account_invitation(@user, current_user)
     end
   end
 
@@ -62,9 +65,9 @@ class InvitationsController < Devise::InvitationsController
     ).sanitise
 
     if params[:action] == "update"
-      sanitised_params.merge(invitation_token: invitation_token)
+      sanitised_params.to_h.merge(invitation_token: invitation_token)
     else
-      sanitised_params
+      sanitised_params.to_h
     end
   end
 
@@ -77,7 +80,13 @@ class InvitationsController < Devise::InvitationsController
   # https://github.com/plataformatec/devise/blob/v2.2/app/controllers/devise_controller.rb#L99
   # for details :)
   def unsanitised_user_params
-    params.fetch(:user, {})
+    params.require(:user).permit(
+      :name, :email, :organisation_id,
+      :invitation_token, :password,
+      :password_confirmation, :require_2sv,
+      :role,
+      supported_permission_ids: []
+    ).to_h
   end
 
   # NOTE: `current_user` doesn't exist for `#edit` and `#update` actions as
@@ -101,5 +110,11 @@ class InvitationsController < Devise::InvitationsController
 
   def update_resource_params
     resource_params
+  end
+
+  def grant_default_permissions(user)
+    SupportedPermission.default.each do |default_permission|
+      user.grant_permission(default_permission)
+    end
   end
 end

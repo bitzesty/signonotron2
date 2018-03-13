@@ -63,7 +63,7 @@ class User < ActiveRecord::Base
   scope :not_recently_unsuspended, lambda { where(['unsuspended_at IS NULL OR unsuspended_at < ?', UNSUSPENSION_GRACE_PERIOD.ago]) }
   scope :with_access_to_application, lambda { |application| UsersWithAccess.new(self, application).users }
   scope :with_2sv_enabled, lambda { |enabled|
-    enabled = ActiveRecord::Type::Boolean.new.type_cast_from_user(enabled)
+    enabled = ActiveRecord::Type::Boolean.new.cast(enabled)
     where("otp_secret_key IS #{'NOT' if enabled} NULL")
   }
 
@@ -94,7 +94,7 @@ class User < ActiveRecord::Base
   end
 
   def event_logs
-    EventLog.where(uid: uid).order(created_at: :desc)
+    EventLog.where(uid: uid).order(created_at: :desc).includes(:user_agent)
   end
 
   def generate_uid
@@ -142,8 +142,12 @@ class User < ActiveRecord::Base
   def grant_application_permissions(application, supported_permission_names)
     supported_permission_names.map do |supported_permission_name|
       supported_permission = SupportedPermission.find_by_application_id_and_name(application.id, supported_permission_name)
-      application_permissions.where(supported_permission_id: supported_permission.id).first_or_create!
+      grant_permission(supported_permission)
     end
+  end
+
+  def grant_permission(supported_permission)
+    application_permissions.where(supported_permission_id: supported_permission.id).first_or_create!
   end
 
   # override Devise::Recoverable behavior to:
@@ -193,7 +197,7 @@ class User < ActiveRecord::Base
   end
 
   def update_stats
-    Statsd.new(::STATSD_HOST).increment("#{::STATSD_PREFIX}.users.created")
+    GovukStatsd.increment("users.created")
   end
 
   # Override Devise::Model::Lockable#lock_access! to add event logging
@@ -300,8 +304,8 @@ private
   end
 
   def organisation_admin_belongs_to_organisation
-    if self.role == 'organisation_admin' && self.organisation_id.blank?
-      errors.add(:organisation_id, "can't be 'None' for an Organisation admin")
+    if %w(organisation_admin super_organisation_admin).include?(self.role) && self.organisation_id.blank?
+      errors.add(:organisation_id, "can't be 'None' for #{self.role.titleize}")
     end
   end
 

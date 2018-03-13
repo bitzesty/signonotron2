@@ -12,15 +12,15 @@
 
 <% if @batch_invitation.in_progress? %>
   <div class="alert alert-info">
-    <%= status_message(@batch_invitation) %>
+    <%= batch_invite_status_message(@batch_invitation) %>
   </div>
 <% elsif @batch_invitation.all_successful? %>
   <div class="alert alert-success">
-    <%= status_message(@batch_invitation) %>
+    <%= batch_invite_status_message(@batch_invitation) %>
   </div>
 <% else %>
   <div class="alert alert-danger">
-    <%= status_message(@batch_invitation) %>
+    <%= batch_invite_status_message(@batch_invitation) %>
   </div>
 <% end %>
 
@@ -29,6 +29,7 @@
     <tr class="table-header">
       <th>Name</th>
       <th>Email</th>
+      <th>Organisation</th>
       <th>Outcome</th>
     </tr>
   </thead>
@@ -37,6 +38,7 @@
       <tr class="<%= user.outcome == "failed" ? "error" : "" %>">
         <td><%= user.name %></td>
         <td><%= user.email %></td>
+        <td><%= batch_invite_organisation_for_user(user) %></td>
         <td><%= user.humanized_outcome %></td>
       </tr>
     <% end %>

@@ -1,6 +1,6 @@
 class SupportedPermissionsController < ApplicationController
-  before_filter :authenticate_user!
-  before_filter :load_and_authorize_application
+  before_action :authenticate_user!
+  before_action :load_and_authorize_application
   respond_to :html
 
   def new
@@ -39,7 +39,7 @@ private
   end
 
   def supported_permission_parameters
-    params.require(:supported_permission).permit(:name, :delegatable)
+    params.require(:supported_permission).permit(:name, :delegatable, :default)
   end
 
   def supported_permission

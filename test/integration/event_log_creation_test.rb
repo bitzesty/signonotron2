@@ -1,7 +1,7 @@
 require 'test_helper'
 require 'helpers/passphrase_support'
 
-class EventLogIntegrationTest < ActionDispatch::IntegrationTest
+class EventLogCreationIntegrationTest < ActionDispatch::IntegrationTest
   include PassPhraseSupport
 
   setup do
@@ -36,7 +36,7 @@ class EventLogIntegrationTest < ActionDispatch::IntegrationTest
     should "not blow up if not given a string for the email" do
       # Assert we don't blow up when looking up the attempted user
       # when people have been messing with the posted params.
-      post "/users/sign_in", "user" => {"email" => {"foo" => "bar"}, :password => "anything"}
+      post "/users/sign_in", params: { "user" => { "email" => { "foo" => "bar" }, :password => "anything" } }
 
       assert response.success?
     end
@@ -76,7 +76,6 @@ class EventLogIntegrationTest < ActionDispatch::IntegrationTest
 
     assert_equal EventLog::PASSPHRASE_RESET_FAILURE, event_log.entry
     assert_match "Passphrase can't be blank", event_log.trailing_message
-    assert_match "Passphrase not strong enough", event_log.trailing_message
   end
 
   test "record successful passphrase reset from email" do
@@ -184,63 +183,38 @@ class EventLogIntegrationTest < ActionDispatch::IntegrationTest
     assert_includes @user.event_logs.map(&:entry), EventLog::PASSPHRASE_EXPIRED
   end
 
-  test "users don't have permission to view account access log" do
-    visit root_path
-    signin_with(@user)
+  context "recording user's ip address" do
+    should "record user's ip address on login" do
+      page.driver.options[:headers] = { 'REMOTE_ADDR' => '1.2.3.4' }
+      visit root_path
+      signin_with(@user)
 
-    click_link "Change your email or passphrase"
-    assert page.has_no_link? 'Account access log'
+      ip_address = @user.event_logs.first.ip_address_string
+      assert_equal '1.2.3.4', ip_address
+    end
+
+    should "call alert error service for ipv6 addresses" do
+      page.driver.options[:headers] = { 'REMOTE_ADDR' => '2001:0db8:0000:0000:0008:0800:200c:417a' }
+      GovukError.expects(:notify)
+      visit root_path
+      signin_with(@user)
+
+      ip_address = @user.event_logs.first.ip_address
+      assert_equal nil, ip_address
+    end
   end
 
-  test "admins have permission to view account access log" do
-    @user.lock_access!
+  test "record who the account was created by" do
     visit root_path
     signin_with(@admin)
-    visit edit_user_path(@user)
-    click_on 'Account access log'
+    visit users_path
+    click_on "Create user"
+    fill_in 'Name', with: 'New User'
+    fill_in 'Email', with: 'test@test.com'
+    click_on "Create user and send email"
 
-    assert_account_access_log_page_content(@user)
-  end
-
-  test "superadmins have permission to view account access log" do
-    @user.lock_access!
-    super_nintendo_chalmers = create(:superadmin_user)
-
-    visit root_path
-    signin_with(super_nintendo_chalmers)
-    visit edit_user_path(@user)
-    click_on 'Account access log'
-
-    assert_account_access_log_page_content(@user)
-  end
-
-  test "organisation admins have permission to view access logs of users belonging to their organisation" do
-    admin = create(:organisation_admin)
-    user = create(:user_in_organisation, organisation: admin.organisation)
-    user.lock_access!
-
-    visit root_path
-    signin_with(admin)
-    visit edit_user_path(user)
-    click_on 'Account access log'
-
-    assert_account_access_log_page_content(user)
-  end
-
-  test "organisation admins don't have permission to view access logs of users belonging to another organisation" do
-    admin = create(:organisation_admin)
-
-    visit root_path
-    signin_with(admin)
-    visit event_logs_user_path(@user)
-
-    assert page.has_content?("You do not have permission to perform this action")
-  end
-
-  def assert_account_access_log_page_content(user)
-    assert_text 'Time'
-    assert_text 'Event'
-    assert_text 'account locked'
-    assert_selector "a", text: user.name
+    event_log = User.last.event_logs.first
+    assert_equal @admin, event_log.initiator
+    assert_equal EventLog::ACCOUNT_INVITED, event_log.entry
   end
 end

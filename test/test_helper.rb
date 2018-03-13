@@ -7,8 +7,8 @@ require 'webmock/minitest'
 require 'mocha/mini_test'
 
 class ActiveSupport::TestCase
-  include FactoryGirl::Syntax::Methods
-  self.use_transactional_fixtures = false
+  include FactoryBot::Syntax::Methods
+  self.use_transactional_tests = false
 
   def db_cleaner_start
     DatabaseCleaner.strategy = :truncation
