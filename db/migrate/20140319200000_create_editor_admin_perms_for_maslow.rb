@@ -1,4 +1,4 @@
-class CreateEditorAdminPermsForMaslow < ActiveRecord::Migration
+class CreateEditorAdminPermsForMaslow < ActiveRecord::Migration[5.1]
   class ::Doorkeeper::Application < ActiveRecord::Base; end
   class SupportedPermission < ActiveRecord::Base
     belongs_to :application, class_name: 'Doorkeeper::Application'

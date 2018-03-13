@@ -11,7 +11,7 @@ class Permission < ActiveRecord::Base
   validates_presence_of :user_id
 end
 
-class SwapMagicEverythingPermissionsForRealOnes < ActiveRecord::Migration
+class SwapMagicEverythingPermissionsForRealOnes < ActiveRecord::Migration[5.1][5.0]
   class ::Doorkeeper::Application
     has_many :permissions, :dependent => :destroy
   end

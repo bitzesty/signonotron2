@@ -1,4 +1,4 @@
-class ModelBeisOrgStructure < ActiveRecord::Migration
+class ModelBeisOrgStructure < ActiveRecord::Migration[5.1]
   def up
     beis = Organisation.find_by(name: 'Department for Business, Energy & Industrial Strategy')
     brdo = Organisation.find_by(name: 'Better Regulation Delivery Office')

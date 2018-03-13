@@ -1,6 +1,10 @@
-class CleanupLhmTables < ActiveRecord::Migration
+class CleanupLhmTables < ActiveRecord::Migration[5.1]
   def up
-    Lhm.cleanup(:run)
+    if ActiveRecord::Base.connection.adapter_name == 'MySQL'
+      Lhm.cleanup(:run)
+    else
+      # Postgresql doesn't support Lhm
+    end
   end
 
   def down

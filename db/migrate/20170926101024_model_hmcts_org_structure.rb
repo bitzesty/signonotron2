@@ -1,4 +1,4 @@
-class ModelHmctsOrgStructure < ActiveRecord::Migration
+class ModelHmctsOrgStructure < ActiveRecord::Migration[5.1]
   def up
     # Make sure parent of HMCTS is MOJ
 

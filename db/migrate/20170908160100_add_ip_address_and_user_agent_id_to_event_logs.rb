@@ -1,12 +1,21 @@
 require 'lhm'
 
-class AddIpAddressAndUserAgentIdToEventLogs < ActiveRecord::Migration
+class AddIpAddressAndUserAgentIdToEventLogs < ActiveRecord::Migration[5.1]
   def self.up
-    Lhm.cleanup(:run)
-    Lhm.change_table :event_logs do |m|
-      m.add_column :ip_address, "BIGINT"
-      m.add_column :user_agent_id, "BIGINT"
-      m.ddl("ALTER TABLE %s ADD CONSTRAINT event_logs_user_agent_id_fk FOREIGN KEY (user_agent_id) REFERENCES user_agents(id)" % m.name)
+    if ActiveRecord::Base.connection.adapter_name == 'MySQL'
+      # MySQL version
+
+      Lhm.cleanup(:run)
+      Lhm.change_table :event_logs do |m|
+        m.add_column :ip_address, "BIGINT"
+        m.add_column :user_agent_id, "BIGINT"
+        m.ddl("ALTER TABLE %s ADD CONSTRAINT event_logs_user_agent_id_fk FOREIGN KEY (user_agent_id) REFERENCES user_agents(id)" % m.name)
+      end
+    else
+      # Postgresql version
+
+      add_column :event_logs, :ip_address, :bigint
+      add_column :event_logs, :user_agent_id, :bigint
     end
   end
 

@@ -1,4 +1,4 @@
-class CreatePermissions < ActiveRecord::Migration
+class CreatePermissions < ActiveRecord::Migration[5.1][5.0]
   def change
     create_table :permissions do |t|
       t.references :user
@@ -7,7 +7,5 @@ class CreatePermissions < ActiveRecord::Migration
 
       t.timestamps
     end
-    add_index :permissions, :user_id
-    add_index :permissions, :application_id
   end
 end

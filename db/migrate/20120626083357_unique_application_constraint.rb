@@ -1,4 +1,4 @@
-class UniqueApplicationConstraint < ActiveRecord::Migration
+class UniqueApplicationConstraint < ActiveRecord::Migration[5.1][5.0]
   def up
     add_index :oauth_applications, "name", unique: true, name: "unique_application_name"
   end

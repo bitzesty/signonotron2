@@ -1,4 +1,4 @@
-class AddBulkGrantPermissionSets < ActiveRecord::Migration
+class AddBulkGrantPermissionSets < ActiveRecord::Migration[5.1]
   def change
     create_table :bulk_grant_permission_sets do |t|
       t.belongs_to :user, null: false
@@ -9,8 +9,8 @@ class AddBulkGrantPermissionSets < ActiveRecord::Migration
     end
 
     create_table :bulk_grant_permission_set_application_permissions do |t|
-      t.belongs_to :bulk_grant_permission_set, null: false
-      t.belongs_to :supported_permission, null: false
+      t.integer :bulk_grant_permission_set_id, null: false
+      t.integer :supported_permission_id, null: false
       t.timestamps
     end
 

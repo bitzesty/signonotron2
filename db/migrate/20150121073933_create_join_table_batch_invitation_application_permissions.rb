@@ -1,4 +1,4 @@
-class CreateJoinTableBatchInvitationApplicationPermissions < ActiveRecord::Migration
+class CreateJoinTableBatchInvitationApplicationPermissions < ActiveRecord::Migration[5.1]
   def change
     create_table :batch_invitation_application_permissions do |t|
       t.integer :batch_invitation_id, null: false
