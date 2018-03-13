@@ -13,7 +13,7 @@ if ENV["ADMIN_EMAIL"].present?
       log "Creating user #{ENV["ADMIN_EMAIL"]} / #{password}"
     end
     user.update! role: "superadmin"
-    user.confirm!
+    user.confirm
   end
 end
 
