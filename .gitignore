@@ -23,3 +23,36 @@
 # Simplecov
 coverage/*
 test/reports/*
+
+# Ignore all logfiles and tempfiles.
+/log/*
+!/log/.keep
+/tmp/*
+.byebug_history
+
+# Local tariff files
+data/*/*.xml
+data/*/*.txt
+data/measures/*
+data/failed-measures-report*
+
+# Environment files
+.env
+
+# Cloud Foundry manifest files
+*manifest.yml
+cf-ssh.yml
+
+# Other files
+config/trade_tariff_backend_secrets.yml
+*.DS_Store
+/coverage/*
+.idea/*
+REVISION
+
+# RVM
+.ruby-gemset
+
+public/assets/*
+public/uploads/*
+
