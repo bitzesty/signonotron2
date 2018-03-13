@@ -229,6 +229,7 @@ GEM
       byebug (~> 10.0)
       pry (~> 0.10)
     public_suffix (3.0.2)
+    puma (3.11.3)
     pundit (1.1.0)
       activesupport (>= 3.0.0)
     rack (2.0.4)
@@ -423,6 +424,7 @@ DEPENDENCIES
   plek (~> 2.1)
   poltergeist (= 1.17.0)
   pry-byebug
+  puma
   pundit (= 1.1.0)
   rails (= 5.1.5)
   rails-controller-testing

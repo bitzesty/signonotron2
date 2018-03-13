@@ -1,2 +1,2 @@
-web: bundle exec unicorn -c ./config/unicorn.rb -p ${PORT:-3016}
+web: bundle exec puma -C config/puma.rb
 worker: bundle exec sidekiq -C ./config/sidekiq.yml

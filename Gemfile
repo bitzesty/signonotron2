@@ -3,6 +3,7 @@ source 'https://rubygems.org'
 ruby "~> 2.4.2"
 
 gem 'rails', '5.1.5'
+gem "puma"
 
 gem 'activejob-retry'
 gem 'addressable', '~> 2.5.2'
