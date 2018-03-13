@@ -25,7 +25,7 @@ gem 'pg', '~> 0.18'
 gem 'pundit', '1.1.0'
 gem 'rake', '10.5.0'
 gem 'rails-html-sanitizer', '1.0.3'
-gem 'redis', '3.3.5'
+gem "redis-rails"
 gem 'rotp', '~> 3.3.1'
 gem 'rqrcode'
 gem 'sass-rails', '~> 5.0.6'
@@ -41,6 +41,10 @@ gem 'govuk_admin_template', '~> 6.5'
 gem 'govuk_app_config', '~> 1.3'
 gem 'govuk_sidekiq', '~> 3.0'
 gem 'plek', '~> 2.1'
+
+group :production do
+  gem "rails_12factor"
+end
 
 group :development do
   gem 'better_errors', '2.4.0'
