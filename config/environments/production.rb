@@ -73,7 +73,7 @@ Rails.application.configure do
   config.active_support.deprecation = :notify
 
   config.action_mailer.default_url_options = {
-    host: URI.parse(Plek.new.external_url_for('signon')).host,
+    host: "signon-dev.cloudapps.digital",
     protocol: 'https'
   }
 
