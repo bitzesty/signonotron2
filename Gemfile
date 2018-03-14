@@ -42,6 +42,10 @@ gem 'govuk_app_config', '~> 1.3'
 gem 'govuk_sidekiq', '~> 3.0'
 gem 'plek', '~> 2.1'
 
+# AWS support
+gem "aws-sdk"
+gem "aws-sdk-rails"
+
 # We freezed it, as it installs higher version by default,
 # which conflicts with cloud foundary's ruby_buildpack
 # as in new version 'ffi' require 'automake' package
