@@ -12,5 +12,5 @@ en:
       no-instance: "no-reply@tariff-email.bitzesty.com"
 
   noisy_batch_invitation_mailer:
-    to: "signon-alerts@digital.cabinet-office.gov.uk"
+    to: "no-reply@tariff-email.bitzesty.com"
 
