@@ -40,6 +40,12 @@ class BatchInvitationUser < ActiveRecord::Base
   end
 
   def organisation_from_slug
+    #
+    # We are mocking organisation as this fork will be used in dev env
+    # by Bitzesty members
+    #
+    return Organisation.find_by(slug: "bitzesty")
+
     # allow memoizing nil with a defined? check instead of ||=
     if defined? @organisation_from_slug
       @organisation_from_slug
