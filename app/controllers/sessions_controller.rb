@@ -2,7 +2,7 @@ class SessionsController < Devise::SessionsController
   skip_before_action :handle_two_step_verification
 
   def destroy
-    ReauthEnforcer.perform_on(current_user) if current_user
+    ::ReauthEnforcer.perform_on(current_user) if current_user
     super
   end
 

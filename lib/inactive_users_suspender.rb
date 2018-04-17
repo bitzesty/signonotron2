@@ -6,7 +6,7 @@ class InactiveUsersSuspender
       user.save(validate: false)
 
       PermissionUpdater.perform_on(user)
-      ReauthEnforcer.perform_on(user)
+      ::ReauthEnforcer.perform_on(user)
 
       EventLog.record_event(user, EventLog::ACCOUNT_AUTOSUSPENDED)
       UserMailer.suspension_notification(user).deliver_now
