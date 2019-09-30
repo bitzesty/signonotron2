@@ -1,5 +1,5 @@
 task :check_for_bad_time_handling do
-  directories = Dir.glob(File.join(Rails.root, '**', '*.rb'))
+  directories = Dir.glob(File.join(Rails.root, "**", "*.rb"))
   matching_files = directories.select do |filename|
     match = false
     File.open(filename) do |file|
@@ -8,18 +8,18 @@ task :check_for_bad_time_handling do
     match
   end
   if matching_files.any?
-    raise <<-MSG
+    raise <<~MSG
 
-Avoid issues with daylight-savings time by always building instances of
-TimeWithZone and not Time. Use methods like:
-    Time.zone.now, Time.zone.parse, n.days.ago, m.hours.from_now, etc
+      Avoid issues with daylight-savings time by always building instances of
+      TimeWithZone and not Time. Use methods like:
+          Time.zone.now, Time.zone.parse, n.days.ago, m.hours.from_now, etc
 
-in preference to methods like:
-    Time.now, Time.utc, Time.parse, etc
+      in preference to methods like:
+          Time.now, Time.utc, Time.parse, etc
 
-Files that contain bad Time handling:
-  #{matching_files.join("\n  ")}
+      Files that contain bad Time handling:
+        #{matching_files.join("\n  ")}
 
-MSG
+    MSG
   end
 end

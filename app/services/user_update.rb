@@ -1,16 +1,18 @@
 class UserUpdate
-  attr_reader :user, :user_params, :current_user
+  attr_reader :user, :user_params, :current_user, :user_ip
 
-  def initialize(user, user_params, current_user)
+  def initialize(user, user_params, current_user, user_ip)
     @user = user
     @user_params = user_params
     @current_user = current_user
+    @user_ip = user_ip
   end
 
   def update
     user.skip_reconfirmation!
     old_permissions = fetch_user_permissions
     return unless update_user
+
     user.application_permissions.reload
 
     record_update
@@ -46,6 +48,7 @@ private
         initiator: current_user,
         application_id: application_id,
         trailing_message: "(#{permissions.map(&:name).join(', ')})",
+        ip_address: user_ip,
       )
     end
 
@@ -55,7 +58,8 @@ private
         EventLog::PERMISSIONS_REMOVED,
         initiator: current_user,
         application_id: application_id,
-        trailing_message: "(#{permissions.map(&:name).join(', ')})"
+        trailing_message: "(#{permissions.map(&:name).join(', ')})",
+        ip_address: user_ip,
       )
     end
   end
@@ -65,6 +69,7 @@ private
       user,
       EventLog::ACCOUNT_UPDATED,
       initiator: current_user,
+      ip_address: user_ip,
     )
   end
 
@@ -93,6 +98,7 @@ private
   def record_email_change_and_notify
     email_change = user.previous_changes[:email]
     return unless email_change
+
     EventLog.record_email_change(user, email_change.first, email_change.last, current_user)
 
     user.invite! if user.invited_but_not_yet_accepted?

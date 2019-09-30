@@ -14,13 +14,13 @@ class UserPolicy < BasePolicy
 
   def edit?
     case current_user.role
-    when 'superadmin'
+    when "superadmin"
       true
-    when 'admin'
+    when "admin"
       can_manage?
-    when 'super_organisation_admin'
+    when "super_organisation_admin"
       allow_self_only || (can_manage? && (record_in_own_organisation? || record_in_child_organisation?))
-    when 'organisation_admin'
+    when "organisation_admin"
       allow_self_only || (can_manage? && record_in_own_organisation?)
     else # 'normal'
       false
@@ -32,11 +32,11 @@ class UserPolicy < BasePolicy
   alias_method :resend?, :edit?
   alias_method :event_logs?, :edit?
 
-  def edit_email_or_passphrase?
+  def edit_email_or_password?
     allow_self_only
   end
-  alias_method :update_email?, :edit_email_or_passphrase?
-  alias_method :update_passphrase?, :edit_email_or_passphrase?
+  alias_method :update_email?, :edit_email_or_password?
+  alias_method :update_password?, :edit_email_or_password?
 
   def cancel_email_change?
     allow_self_only || edit?

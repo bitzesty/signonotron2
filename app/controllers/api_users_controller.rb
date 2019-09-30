@@ -2,7 +2,7 @@ class ApiUsersController < ApplicationController
   include UserPermissionsControllerMethods
 
   before_action :authenticate_user!
-  before_action :load_and_authorize_api_user, only: [:edit, :update]
+  before_action :load_and_authorize_api_user, only: %i[edit update]
   helper_method :applications_and_permissions, :visible_applications
 
   respond_to :html
@@ -26,7 +26,7 @@ class ApiUsersController < ApplicationController
     @api_user.api_user = true
 
     if @api_user.save
-      EventLog.record_event(@api_user, EventLog::API_USER_CREATED, initiator: current_user)
+      EventLog.record_event(@api_user, EventLog::API_USER_CREATED, initiator: current_user, ip_address: user_ip_address)
       redirect_to [:edit, @api_user], notice: "Successfully created API user"
     else
       render :new

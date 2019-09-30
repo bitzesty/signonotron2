@@ -1,6 +1,8 @@
 # Copied from
 # https://github.com/plataformatec/devise/blob/v2.1.2/app/controllers/devise/confirmations_controller.rb#L19
 class ConfirmationsController < Devise::ConfirmationsController
+  layout "admin_layout"
+
   def new
     handle_new_token_needed
   end
@@ -9,7 +11,7 @@ class ConfirmationsController < Devise::ConfirmationsController
     handle_new_token_needed
   end
 
-  # GET /resource/confirmation?confirmation_token=abcdef
+  # GET /users/confirmation?confirmation_token=abcdef
   def show
     if user_signed_in?
       if confirmation_user.persisted? && (current_user.email != confirmation_user.email)
@@ -17,7 +19,7 @@ class ConfirmationsController < Devise::ConfirmationsController
       else
         self.resource = resource_class.confirm_by_token(params[:confirmation_token])
         if resource.errors.empty?
-          EventLog.record_event(resource, EventLog::EMAIL_CHANGE_CONFIRMED)
+          EventLog.record_event(resource, EventLog::EMAIL_CHANGE_CONFIRMED, ip_address: user_ip_address)
           set_flash_message(:notice, :confirmed) if is_navigational_format?
           sign_in(resource_name, resource)
           respond_with_navigational(resource) { redirect_to after_confirmation_path_for(resource_name, resource) }
@@ -39,7 +41,7 @@ class ConfirmationsController < Devise::ConfirmationsController
     if self.resource.valid_password?(params[:user][:password])
       self.resource = resource_class.confirm_by_token(params[:confirmation_token])
       if resource.errors.empty?
-        EventLog.record_event(resource, EventLog::EMAIL_CHANGE_CONFIRMED)
+        EventLog.record_event(resource, EventLog::EMAIL_CHANGE_CONFIRMED, ip_address: user_ip_address)
         set_flash_message(:notice, :confirmed) if is_navigational_format?
         sign_in(resource_name, resource)
         respond_with_navigational(resource) { redirect_to after_confirmation_path_for(resource_name, resource) }
@@ -52,7 +54,8 @@ class ConfirmationsController < Devise::ConfirmationsController
     end
   end
 
-  private
+private
+
   def confirmation_user
     @confirmation_user ||= resource_class.find_or_initialize_by(confirmation_token: params[:confirmation_token])
   end

@@ -1,51 +1,43 @@
 ENV["RAILS_ENV"] = "test"
-require File.expand_path('../../config/environment', __FILE__)
+require File.expand_path("../config/environment", __dir__)
 
-require 'rails/test_help'
-require 'shoulda/context'
-require 'webmock/minitest'
-require 'mocha/mini_test'
+require "rails/test_help"
+require "shoulda/context"
+require "webmock/minitest"
+require "mocha/minitest"
 
 class ActiveSupport::TestCase
   include FactoryBot::Syntax::Methods
-  self.use_transactional_tests = false
-
-  def db_cleaner_start
-    DatabaseCleaner.strategy = :truncation
-  end
-
-  setup do
-    db_cleaner_start
-  end
 
   teardown do
     Timecop.return
     WebMock.reset!
-    DatabaseCleaner.clean
     Mail::TestMailer.deliveries.clear
   end
 end
 
 WebMock.disable_net_connect!(allow_localhost: true)
 
-require 'helpers/confirmation_token_helper'
+require "support/confirmation_token_helpers"
 
 class ActionController::TestCase
   include Devise::Test::ControllerHelpers
-  include ConfirmationTokenHelper
+  include ConfirmationTokenHelpers
 
   def sign_in(user)
     warden.stubs(authenticate!: user)
     @controller.stubs(current_user: user)
   end
 
-  def sign_out(user)
+  def sign_out(_user)
     warden.unstub(:authenticate!)
     @controller.unstub(:current_user)
   end
 end
 
-require 'capybara/rails'
+Capybara.server = :webrick
+
+require "capybara/rails"
 
 Capybara.register_driver :rack_test do |app|
   # capybara/rails sets up the rack-test driver to respect data-method attributes.
@@ -59,12 +51,12 @@ Capybara.register_driver :rack_test do |app|
   Capybara::RackTest::Driver.new(app)
 end
 
-require 'capybara/poltergeist'
+require "capybara/poltergeist"
 Capybara.javascript_driver = :poltergeist
 
-require 'helpers/user_helpers'
-require 'helpers/email_helpers'
-require 'helpers/analytics_helpers'
+require "support/user_helpers"
+require "support/email_helpers"
+require "support/analytics_helpers"
 
 class ActiveRecord::Base
   mattr_accessor :shared_connection
@@ -82,7 +74,7 @@ class ActionDispatch::IntegrationTest
   include Capybara::DSL
   include UserHelpers
   include EmailHelpers
-  include ConfirmationTokenHelper
+  include ConfirmationTokenHelpers
   include AnalyticsHelpers
 
   def assert_response_contains(content)
@@ -104,13 +96,6 @@ class ActionDispatch::IntegrationTest
 
   def use_javascript_driver
     Capybara.current_driver = Capybara.javascript_driver
-  end
-
- # Override the default strategy as tests with the JS driver require
- # tests not to be wrapped in a transaction
-  def db_cleaner_start
-    DatabaseCleaner.strategy = :transaction
-    DatabaseCleaner.start
   end
 
   setup do

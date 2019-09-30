@@ -1,10 +1,12 @@
-require 'csv'
+require "csv"
 
 class UsersController < ApplicationController
   include UserPermissionsControllerMethods
 
+  layout "admin_layout", only: %w(edit_email_or_password)
+
   before_action :authenticate_user!, except: :show
-  before_action :load_and_authorize_user, except: [:index, :show]
+  before_action :load_and_authorize_user, except: %i[index show]
   before_action :allow_no_application_access, only: [:update]
   helper_method :applications_and_permissions, :any_filter?
   respond_to :html
@@ -33,8 +35,8 @@ class UsersController < ApplicationController
         paginate_users
       end
       format.csv do
-        headers['Content-Disposition'] = 'attachment; filename="signon_users.csv"'
-        render plain: export, content_type: 'text/csv'
+        headers["Content-Disposition"] = 'attachment; filename="signon_users.csv"'
+        render plain: export, content_type: "text/csv"
       end
     end
   end
@@ -46,7 +48,7 @@ class UsersController < ApplicationController
   def update
     raise Pundit::NotAuthorizedError if params[:user][:organisation_id].present? && !policy(@user).assign_organisations?
 
-    updater = UserUpdate.new(@user, user_params, current_user)
+    updater = UserUpdate.new(@user, user_params, current_user, user_ip_address)
     if updater.update
       redirect_to users_path, notice: "Updated user #{@user.email} successfully"
     else
@@ -55,7 +57,7 @@ class UsersController < ApplicationController
   end
 
   def unlock
-    EventLog.record_event(@user, EventLog::MANUAL_ACCOUNT_UNLOCK, initiator: current_user)
+    EventLog.record_event(@user, EventLog::MANUAL_ACCOUNT_UNLOCK, initiator: current_user, ip_address: user_ip_address)
     @user.unlock_access!
     flash[:notice] = "Unlocked #{@user.email}"
     redirect_back(fallback_location: root_path)
@@ -92,26 +94,25 @@ class UsersController < ApplicationController
     new_email = params[:user][:email]
     if current_email == new_email.strip
       flash[:alert] = "Nothing to update."
-      render :edit_email_or_passphrase
+      render :edit_email_or_password, layout: "admin_layout"
     elsif @user.update_attributes(email: new_email)
       EventLog.record_email_change(@user, current_email, new_email)
       UserMailer.email_changed_notification(@user).deliver_later
       redirect_to root_path, notice: "An email has been sent to #{new_email}. Follow the link in the email to update your address."
     else
-      flash[:alert] = "Failed to change email."
-      render :edit_email_or_passphrase
+      render :edit_email_or_password, layout: "admin_layout"
     end
   end
 
-  def update_passphrase
+  def update_password
     if @user.update_with_password(password_params)
-      EventLog.record_event(@user, EventLog::SUCCESSFUL_PASSPHRASE_CHANGE)
-      flash[:notice] = t(:updated, scope: 'devise.passwords')
+      EventLog.record_event(@user, EventLog::SUCCESSFUL_PASSWORD_CHANGE, ip_address: user_ip_address)
+      flash[:notice] = t(:updated, scope: "devise.passwords")
       bypass_sign_in(@user)
       redirect_to root_path
     else
-      EventLog.record_event(@user, EventLog::UNSUCCESSFUL_PASSPHRASE_CHANGE)
-      render :edit_email_or_passphrase
+      EventLog.record_event(@user, EventLog::UNSUCCESSFUL_PASSWORD_CHANGE, ip_address: user_ip_address)
+      render :edit_email_or_password, layout: "admin_layout"
     end
   end
 
@@ -122,7 +123,7 @@ class UsersController < ApplicationController
     redirect_to :root, notice: "Reset 2-step verification for #{@user.email}"
   end
 
-  private
+private
 
   def load_and_authorize_user
     @user = current_user.normal? ? current_user : User.find(params[:id])
@@ -130,7 +131,7 @@ class UsersController < ApplicationController
   end
 
   def filter_users
-    @users = @users.filter(params[:filter]) if params[:filter].present?
+    @users = @users.filter_by_name(params[:filter]) if params[:filter].present?
     @users = @users.with_role(params[:role]) if can_filter_role?
     @users = @users.with_organisation(params[:organisation]) if params[:organisation].present?
     @users = @users.with_status(params[:status]) if params[:status].present?
@@ -143,19 +144,19 @@ class UsersController < ApplicationController
   end
 
   def should_include_permissions?
-    params[:format] == 'csv'
+    params[:format] == "csv"
   end
 
   def paginate_users
     if any_filter?
-      if @users.is_a?(Array)
-        @users = Kaminari.paginate_array(@users).page(params[:page]).per(100)
-      else
-        @users = @users.page(params[:page]).per(100)
-      end
+      @users = if @users.is_a?(Array)
+                 Kaminari.paginate_array(@users).page(params[:page]).per(100)
+               else
+                 @users.page(params[:page]).per(100)
+               end
     else
       @users, @sorting_params = @users.alpha_paginate(
-        params.fetch(:letter, 'A'),
+        params.fetch(:letter, "A"),
         ALPHABETICAL_PAGINATE_CONFIG.dup,
         &:name
       )

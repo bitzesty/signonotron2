@@ -9,14 +9,15 @@ module Devise
         # using User.not_suspended for now
         # TODO: work out why this scope is not working
         #       but the one in user model is.
-        scope :active, -> { where('suspended_at' => nil) }
-        scope :suspended, -> { where('suspended_at IS NOT NULL') }
-        scope :current, proc { |current| current == 't' ? active : suspended }
+        scope :active, -> { where("suspended_at" => nil) }
+        scope :suspended, -> { where("suspended_at IS NOT NULL") }
+        scope(:current, proc { |current| current == "t" ? active : suspended })
       end
 
       def active_for_authentication?
         if super
           return true unless suspended?
+
           EventLog.record_event(self, EventLog::SUSPENDED_ACCOUNT_AUTHENTICATED_LOGIN)
         end
         false
@@ -39,6 +40,7 @@ module Devise
         self.reason_for_suspension = nil
         self.suspended_at = nil
         self.unsuspended_at = Time.zone.now
+        self.password = SecureRandom.hex
         save
       end
 

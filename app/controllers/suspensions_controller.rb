@@ -12,7 +12,7 @@ class SuspensionsController < ApplicationController
     end
 
     if succeeded
-      EventLog.record_event(@user, action, initiator: current_user)
+      EventLog.record_event(@user, action, initiator: current_user, ip_address: user_ip_address)
       PermissionUpdater.perform_on(@user)
       ReauthEnforcer.perform_on(@user)
 
@@ -25,7 +25,7 @@ class SuspensionsController < ApplicationController
     end
   end
 
-  private
+private
 
   def load_and_authorize_user
     @user = User.find(params[:id])

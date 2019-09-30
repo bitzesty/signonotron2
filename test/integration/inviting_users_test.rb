@@ -1,4 +1,4 @@
-require 'test_helper'
+require "test_helper"
 
 class InvitingUsersTest < ActionDispatch::IntegrationTest
   include EmailHelpers
@@ -8,9 +8,9 @@ class InvitingUsersTest < ActionDispatch::IntegrationTest
     user = User.invite!(name: "Jim", email: "jim@web.com")
     visit accept_user_invitation_path(invitation_token: user.raw_invitation_token)
 
-    fill_in "New passphrase", with: "this 1s 4 v3333ry s3cur3 p4ssw0rd.!Z"
-    fill_in "Confirm new passphrase", with: "this 1s 4 v3333ry s3cur3 p4ssw0rd.!Z"
-    click_button "Set my passphrase"
+    fill_in "New password", with: "this 1s 4 v3333ry s3cur3 p4ssw0rd.!Z"
+    fill_in "Confirm new password", with: "this 1s 4 v3333ry s3cur3 p4ssw0rd.!Z"
+    click_button "Save password"
 
     assert_response_contains("You are now signed in")
   end
@@ -41,15 +41,33 @@ class InvitingUsersTest < ActionDispatch::IntegrationTest
 
         assert_not_nil User.where(email: "fred@example.com", role: "normal").first
         assert_equal "fred@example.com", last_email.to[0]
-        assert_match 'Please confirm your account', last_email.subject
+        assert_match "Please confirm your account", last_email.subject
+      end
+    end
+
+    should "resend the invite" do
+      perform_enqueued_jobs do
+        visit new_user_invitation_path
+        fill_in "Name", with: "Fred Bloggs"
+        fill_in "Email", with: "fred@example.com"
+        click_button "Create user and send email"
+
+        user = User.find_by(email: "fred@example.com")
+        visit edit_user_path(user)
+
+        click_button "Resend signup email"
+
+        assert page.has_content?("Resent account signup email")
+        emails_received = all_emails.count { |email| email.subject == "Please confirm your account" }
+        assert_equal 2, emails_received
       end
     end
 
     should "grant the permissions selected" do
       application_one = create(:application)
-      create(:supported_permission, application: application_one, name: 'editor')
+      create(:supported_permission, application: application_one, name: "editor")
       application_two = create(:application)
-      create(:supported_permission, application: application_two, name: 'gds-admin')
+      create(:supported_permission, application: application_two, name: "gds-admin")
 
       visit new_user_invitation_path
       fill_in "Name", with: "Alicia Smith"
@@ -57,21 +75,21 @@ class InvitingUsersTest < ActionDispatch::IntegrationTest
 
       uncheck "Has access to #{application_one.name}?"
       check "Has access to #{application_two.name}?"
-      select 'editor', from: "Permissions for #{application_one.name}"
-      unselect 'gds-admin', from: "Permissions for #{application_two.name}"
+      select "editor", from: "Permissions for #{application_one.name}"
+      unselect "gds-admin", from: "Permissions for #{application_two.name}"
 
       click_button "Create user and send email"
 
-      u = User.find_by(email: 'alicia@example.com')
+      u = User.find_by(email: "alicia@example.com")
       refute u.has_access_to? application_one
-      assert_includes u.permissions_for(application_one), 'editor'
+      assert_includes u.permissions_for(application_one), "editor"
       assert u.has_access_to? application_two
-      refute_includes u.permissions_for(application_two), 'gds-admin'
+      refute_includes u.permissions_for(application_two), "gds-admin"
     end
 
     should "grant the user any default permissions" do
       application_one = create(:application)
-      create(:supported_permission, application: application_one, name: 'editor', default: true)
+      create(:supported_permission, application: application_one, name: "editor", default: true)
       application_two = create(:application)
       application_two.signin_permission.update_attributes(default: true)
 
@@ -80,9 +98,9 @@ class InvitingUsersTest < ActionDispatch::IntegrationTest
       fill_in "Email", with: "alicia@example.com"
       click_button "Create user and send email"
 
-      u = User.find_by(email: 'alicia@example.com')
+      u = User.find_by(email: "alicia@example.com")
       assert u.has_access_to? application_two
-      assert_equal ['editor'], u.permissions_for(application_one)
+      assert_equal %w[editor], u.permissions_for(application_one)
     end
 
     should "show an error message when attempting to create a user without an email" do
@@ -123,18 +141,18 @@ class InvitingUsersTest < ActionDispatch::IntegrationTest
         assert_not_nil User.find_by(
           email: "fred_admin@example.com",
           role: "admin",
-          require_2sv: true
+          require_2sv: true,
         )
         assert_equal "fred_admin@example.com", last_email.to[0]
-        assert_match 'Please confirm your account', last_email.subject
+        assert_match "Please confirm your account", last_email.subject
       end
     end
 
     should "grant the permissions selected" do
       application_one = create(:application)
-      create(:supported_permission, application: application_one, name: 'editor')
+      create(:supported_permission, application: application_one, name: "editor")
       application_two = create(:application)
-      create(:supported_permission, application: application_two, name: 'gds-admin')
+      create(:supported_permission, application: application_two, name: "gds-admin")
 
       visit new_user_invitation_path
       fill_in "Name", with: "Alicia Smith"
@@ -142,21 +160,21 @@ class InvitingUsersTest < ActionDispatch::IntegrationTest
 
       uncheck "Has access to #{application_one.name}?"
       check "Has access to #{application_two.name}?"
-      select 'editor', from: "Permissions for #{application_one.name}"
-      unselect 'gds-admin', from: "Permissions for #{application_two.name}"
+      select "editor", from: "Permissions for #{application_one.name}"
+      unselect "gds-admin", from: "Permissions for #{application_two.name}"
 
       click_button "Create user and send email"
 
-      u = User.find_by(email: 'alicia@example.com')
+      u = User.find_by(email: "alicia@example.com")
       refute u.has_access_to? application_one
-      assert_includes u.permissions_for(application_one), 'editor'
+      assert_includes u.permissions_for(application_one), "editor"
       assert u.has_access_to? application_two
-      refute_includes u.permissions_for(application_two), 'gds-admin'
+      refute_includes u.permissions_for(application_two), "gds-admin"
     end
 
     should "grant the user any default permissions" do
       application_one = create(:application)
-      create(:supported_permission, application: application_one, name: 'editor', default: true)
+      create(:supported_permission, application: application_one, name: "editor", default: true)
       application_two = create(:application)
       application_two.signin_permission.update_attributes(default: true)
 
@@ -165,9 +183,9 @@ class InvitingUsersTest < ActionDispatch::IntegrationTest
       fill_in "Email", with: "alicia@example.com"
       click_button "Create user and send email"
 
-      u = User.find_by(email: 'alicia@example.com')
+      u = User.find_by(email: "alicia@example.com")
       assert u.has_access_to? application_two
-      assert_equal ['editor'], u.permissions_for(application_one)
+      assert_equal %w[editor], u.permissions_for(application_one)
     end
   end
 end

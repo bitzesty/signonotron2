@@ -44,18 +44,18 @@ class ModelDefraOrgStructure < ActiveRecord::Migration
             "South Downs National Park Authority",
             "Yorkshire Dales National Park Authority",
             "Rural Development Programme for England Network",
-            "Veterinary Residues Committee"
+            "Veterinary Residues Committee",
         ],
         fera => [
-            "UK Government Decontamination Service"
+            "UK Government Decontamination Service",
         ],
         rpa => [
-            "British Cattle Movement Service"
+            "British Cattle Movement Service",
         ],
         fc => [
             "Forest Enterprise (England)",
-            "Forest Research"
-        ]
+            "Forest Research",
+        ],
     }
 
     missing_orgs = []
@@ -69,11 +69,11 @@ class ModelDefraOrgStructure < ActiveRecord::Migration
         else
           if org.parent != expected_parent
             begin
-              old_parent_name = org.parent.nil?? "nil" : org.parent.name
+              old_parent_name = org.parent.nil? ? "nil" : org.parent.name
               puts "Checking parent for #{child_name}. Old parent is #{old_parent_name}"
               org.update_attributes!(parent: expected_parent)
               puts "Updating parent for #{child_name} from #{old_parent_name} to #{expected_parent.name}"
-            rescue => error
+            rescue StandardError => error
               puts "Parent re-assignment failed for: #{child_name} with error '#{error.message}'"
             end
           else

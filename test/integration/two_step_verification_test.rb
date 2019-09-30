@@ -1,6 +1,6 @@
 #encoding: utf-8
-require 'test_helper'
-require 'helpers/passphrase_support'
+
+require "test_helper"
 
 class TwoStepVerificationTest < ActionDispatch::IntegrationTest
   include ActiveJob::TestHelper
@@ -50,9 +50,7 @@ class TwoStepVerificationTest < ActionDispatch::IntegrationTest
       should "require the code again on next login" do
         enter_2sv_code(@new_secret)
 
-        within("main") do
-          click_link "Sign out"
-        end
+        click_link "Sign out"
 
         signin_with(@user)
       end
@@ -80,7 +78,7 @@ class TwoStepVerificationTest < ActionDispatch::IntegrationTest
       end
 
       should "accept a valid code, persist the secret, log an event and notify by email" do
-        SUCCESS = "2-step verification set up"
+        SUCCESS = "2-step verification set up".freeze
         perform_enqueued_jobs do
           enter_2sv_code(@new_secret)
 

@@ -7,9 +7,9 @@ class ModelNioOrgStructure < ActiveRecord::Migration
         nio => [
             "Boundary Commission for Northern Ireland",
             "Northern Ireland Human Rights Commission",
-            "Parades Commission for Northern Ireland"
+            "Parades Commission for Northern Ireland",
         ],
-        so => ["Boundary Commission for Scotland"]
+        so => ["Boundary Commission for Scotland"],
     }
 
     missing_orgs = []
@@ -36,11 +36,11 @@ class ModelNioOrgStructure < ActiveRecord::Migration
   def update_parent(org, parent)
     if org.parent != parent
       begin
-        old_parent_name = org.parent.nil?? "nil" : org.parent.name
+        old_parent_name = org.parent.nil? ? "nil" : org.parent.name
         puts "Checking parent for #{org.name}. Old parent is #{old_parent_name}"
         org.update_attributes!(parent: parent)
         puts "Updating parent for #{org.name} from #{old_parent_name} to #{parent.name}"
-      rescue => error
+      rescue StandardError => error
         puts "Parent re-assignment failed for: #{org.name} with error '#{error.message}'"
       end
     else

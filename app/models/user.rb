@@ -3,10 +3,6 @@
 class User < ActiveRecord::Base
   include Roles
 
-  # Don't allow whitelisting/etc attributes in the model, User-updating
-  # controller actions now use strong params
-  include ActiveModel::ForbiddenAttributesProtection
-
   self.include_root_in_json = true
 
   SUSPENSION_THRESHOLD_PERIOD = 45.days
@@ -16,13 +12,12 @@ class User < ActiveRecord::Base
   MAX_2SV_DRIFT_SECONDS = 30
   REMEMBER_2SV_SESSION_FOR = 30.days
 
-  USER_STATUS_SUSPENDED = 'suspended'
-  USER_STATUS_INVITED = 'invited'
-  USER_STATUS_PASSPHRASE_EXPIRED = 'passphrase expired'
-  USER_STATUS_LOCKED = 'locked'
-  USER_STATUS_ACTIVE = 'active'
-  USER_STATUSES = [USER_STATUS_SUSPENDED, USER_STATUS_INVITED, USER_STATUS_PASSPHRASE_EXPIRED,
-                   USER_STATUS_LOCKED, USER_STATUS_ACTIVE]
+  USER_STATUS_SUSPENDED = "suspended".freeze
+  USER_STATUS_INVITED = "invited".freeze
+  USER_STATUS_LOCKED = "locked".freeze
+  USER_STATUS_ACTIVE = "active".freeze
+  USER_STATUSES = [USER_STATUS_SUSPENDED, USER_STATUS_INVITED,
+                   USER_STATUS_LOCKED, USER_STATUS_ACTIVE].freeze
 
   devise :database_authenticatable,
          :recoverable, :trackable,
@@ -32,16 +27,15 @@ class User < ActiveRecord::Base
          :zxcvbnable,
          :encryptable,
          :confirmable,
-         :password_archivable, # in signon/lib/devise/models/password_archivable.rb
-         :password_expirable   # in signon/lib/devise/models/password_expirable.rb
+         :password_archivable # in signon/lib/devise/models/password_archivable.rb
 
   validates :name, presence: true
   validates :reason_for_suspension, presence: true, if: proc { |u| u.suspended? }
   validate :organisation_admin_belongs_to_organisation
   validate :email_is_ascii_only
 
-  has_many :authorisations, class_name: 'Doorkeeper::AccessToken', foreign_key: :resource_owner_id
-  has_many :application_permissions, class_name: 'UserApplicationPermission', inverse_of: :user
+  has_many :authorisations, class_name: "Doorkeeper::AccessToken", foreign_key: :resource_owner_id
+  has_many :application_permissions, class_name: "UserApplicationPermission", inverse_of: :user
   has_many :supported_permissions, through: :application_permissions
   has_many :batch_invitations
   belongs_to :organisation
@@ -51,16 +45,17 @@ class User < ActiveRecord::Base
   after_create :update_stats
   before_save :set_2sv_for_admin_roles
   before_save :mark_two_step_flag_changed
+  before_save :update_password_changed
 
   scope :web_users, -> { where(api_user: false) }
   scope :not_suspended, -> { where(suspended_at: nil) }
   scope :with_role, lambda { |role_name| where(role: role_name) }
   scope :with_organisation, lambda { |org_id| where(organisation_id: org_id) }
-  scope :filter, lambda { |filter_param| where("users.email like ? OR users.name like ?", "%#{filter_param.strip}%", "%#{filter_param.strip}%") }
-  scope :last_signed_in_on, lambda { |date| web_users.not_suspended.where('date(current_sign_in_at) = date(?)', date) }
-  scope :last_signed_in_before, lambda { |date| web_users.not_suspended.where('date(current_sign_in_at) < date(?)', date) }
-  scope :last_signed_in_after, lambda { |date| web_users.not_suspended.where('date(current_sign_in_at) >= date(?)', date) }
-  scope :not_recently_unsuspended, lambda { where(['unsuspended_at IS NULL OR unsuspended_at < ?', UNSUSPENSION_GRACE_PERIOD.ago]) }
+  scope :filter_by_name, lambda { |filter_param| where("users.email like ? OR users.name like ?", "%#{filter_param.strip}%", "%#{filter_param.strip}%") }
+  scope :last_signed_in_on, lambda { |date| web_users.not_suspended.where("date(current_sign_in_at) = date(?)", date) }
+  scope :last_signed_in_before, lambda { |date| web_users.not_suspended.where("date(current_sign_in_at) < date(?)", date) }
+  scope :last_signed_in_after, lambda { |date| web_users.not_suspended.where("date(current_sign_in_at) >= date(?)", date) }
+  scope :not_recently_unsuspended, lambda { where(["unsuspended_at IS NULL OR unsuspended_at < ?", UNSUSPENSION_GRACE_PERIOD.ago]) }
   scope :with_access_to_application, lambda { |application| UsersWithAccess.new(self, application).users }
   scope :with_2sv_enabled, lambda { |enabled|
     enabled = ActiveRecord::Type::Boolean.new.cast(enabled)
@@ -73,15 +68,12 @@ class User < ActiveRecord::Base
       where.not(suspended_at: nil)
     when USER_STATUS_INVITED
       where.not(invitation_sent_at: nil).where(invitation_accepted_at: nil)
-    when USER_STATUS_PASSPHRASE_EXPIRED
-      with_need_change_password
     when USER_STATUS_LOCKED
       where.not(locked_at: nil)
     when USER_STATUS_ACTIVE
       where(suspended_at: nil, locked_at: nil).
         where(arel_table[:invitation_sent_at].eq(nil).
-          or(arel_table[:invitation_accepted_at].not_eq(nil))).
-        without_need_change_password
+          or(arel_table[:invitation_accepted_at].not_eq(nil)))
     else
       raise NotImplementedError.new("Filtering by status '#{status}' not implemented.")
     end
@@ -109,7 +101,7 @@ class User < ActiveRecord::Base
     application_permissions
       .joins(:supported_permission)
       .where(application_id: application.id)
-      .order('supported_permissions.name')
+      .order("supported_permissions.name")
       .pluck(:name)
   end
 
@@ -123,7 +115,7 @@ class User < ActiveRecord::Base
   end
 
   def has_access_to?(application)
-    application_permissions.detect {|permission| permission.supported_permission_id == application.signin_permission.id }
+    application_permissions.detect { |permission| permission.supported_permission_id == application.signin_permission.id }
   end
 
   def permissions_synced!(application)
@@ -150,19 +142,22 @@ class User < ActiveRecord::Base
     application_permissions.where(supported_permission_id: supported_permission.id).first_or_create!
   end
 
-  # override Devise::Recoverable behavior to:
-  # 1. notify suspended users that they can't reset their password, and
-  # 2. handle emails blacklisted by AWS such that we conceal whether
-  #    or not an account exists for that email. moved from:
-  #    https://github.com/alphagov/signon/commit/451b89d9
+  # This overrides `Devise::Recoverable` behavior.
   def self.send_reset_password_instructions(attributes = {})
     user = User.find_by_email(attributes[:email])
     if user.present? && user.suspended?
       UserMailer.notify_reset_password_disallowed_due_to_suspension(user).deliver_later
       user
+    elsif user.present? && user.invited_but_not_yet_accepted?
+      UserMailer.notify_reset_password_disallowed_due_to_unaccepted_invitation(user).deliver_later
+      user
     else
       super
     end
+  end
+
+  def unusable_account?
+    invited_but_not_yet_accepted? || suspended? || access_locked?
   end
 
   # Required for devise_invitable to set role and permissions
@@ -210,10 +205,11 @@ class User < ActiveRecord::Base
 
   def status
     return USER_STATUS_SUSPENDED if suspended?
+
     unless api_user?
       return USER_STATUS_INVITED if invited_but_not_yet_accepted?
-      return USER_STATUS_PASSPHRASE_EXPIRED if need_change_password?
     end
+
     return USER_STATUS_LOCKED if access_locked?
 
     USER_STATUS_ACTIVE
@@ -234,12 +230,13 @@ class User < ActiveRecord::Base
 
   def set_2sv_for_admin_roles
     return if Rails.application.config.instance_name.present?
+
     self.require_2sv = true if role_changed? && (admin? || superadmin?)
   end
 
   def authenticate_otp(code)
     totp = ROTP::TOTP.new(otp_secret_key)
-    result = totp.verify_with_drift(code, MAX_2SV_DRIFT_SECONDS)
+    result = totp.verify(code, drift_behind: MAX_2SV_DRIFT_SECONDS)
 
     if result
       update_attribute(:second_factor_attempts_count, 0)
@@ -257,7 +254,7 @@ class User < ActiveRecord::Base
     if max_2sv_login_attempts?
       :two_step
     else
-      :passphrase
+      :password
     end
   end
 
@@ -283,13 +280,17 @@ class User < ActiveRecord::Base
       EventLog.record_event(
         self,
         EventLog::TWO_STEP_RESET,
-        initiator: initiating_superadmin
+        initiator: initiating_superadmin,
       )
     end
   end
 
   def send_two_step_flag_notification?
     require_2sv? && two_step_flag_changed?
+  end
+
+  def belongs_to_gds?
+    organisation.try(:content_id).to_s == Organisation::GDS_ORG_CONTENT_ID
   end
 
 private
@@ -314,6 +315,10 @@ private
   end
 
   def fix_apostrophe_in_email
-    self.email.tr!('’', "'") if email.present? && email_changed?
+    self.email.tr!("’", "'") if email.present? && email_changed?
+  end
+
+  def update_password_changed
+    self.password_changed_at = Time.zone.now if (self.new_record? || self.encrypted_password_changed?) && !self.password_changed_at_changed?
   end
 end

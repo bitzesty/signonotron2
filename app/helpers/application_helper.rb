@@ -1,4 +1,4 @@
-require 'addressable/uri'
+require "addressable/uri"
 
 module ApplicationHelper
   def nav_link(text, link)
@@ -20,11 +20,11 @@ module ApplicationHelper
     if policy(current_user).edit?
       edit_user_path(current_user)
     else
-      edit_email_or_passphrase_user_path(current_user)
+      edit_email_or_password_user_path(current_user)
     end
   end
 
-  SENSITIVE_QUERY_PARAMETERS = %w{reset_password_token invitation_token}
+  SENSITIVE_QUERY_PARAMETERS = %w{reset_password_token invitation_token}.freeze
 
   def sensitive_query_parameters?
     (request.query_parameters.keys & SENSITIVE_QUERY_PARAMETERS).any?

@@ -10,7 +10,7 @@ class ModelWelshGovOrgStructure < ActiveRecord::Migration
         "Sports Council for Wales",
         "Wales Audit Office",
         "Welsh Development Agency",
-        "Further and Higher Education Funding Councils for Wales"
+        "Further and Higher Education Funding Councils for Wales",
     ]
 
     missing_orgs = []
@@ -46,17 +46,16 @@ class ModelWelshGovOrgStructure < ActiveRecord::Migration
     else
       puts "Missing organisations: #{missing_orgs.join("\n")}"
     end
-
   end
 
   def update_parent(org, parent)
     if org.parent != parent
       begin
-        old_parent_name = org.parent.nil?? "nil" : org.parent.name
+        old_parent_name = org.parent.nil? ? "nil" : org.parent.name
         puts "Checking parent for #{org.name}. Old parent is #{old_parent_name}"
         org.update_attributes!(parent: parent)
         puts "Updating parent for #{org.name} from #{old_parent_name} to #{parent.name}"
-      rescue => error
+      rescue StandardError => error
         puts "Parent re-assignment failed for: #{org.name} with error '#{error.message}'"
       end
     else

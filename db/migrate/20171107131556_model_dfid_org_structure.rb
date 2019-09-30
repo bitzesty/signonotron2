@@ -3,13 +3,13 @@ class ModelDfidOrgStructure < ActiveRecord::Migration
     dfid = Organisation.find_by(name: "Department for International Development")
 
     child_org_names = [
-      'Commonwealth Scholarship Commission in the UK',
-      'Independent Commission for Aid Impact',
+      "Commonwealth Scholarship Commission in the UK",
+      "Independent Commission for Aid Impact",
     ]
 
     closed_child_org_names = [
-      'Crown Agents Holding and Realisation Board',
-      'Natural Resources Institute',
+      "Crown Agents Holding and Realisation Board",
+      "Natural Resources Institute",
     ]
 
     missing_orgs = []
@@ -50,11 +50,11 @@ class ModelDfidOrgStructure < ActiveRecord::Migration
   def update_parent(org, parent)
     if org.parent != parent
       begin
-        old_parent_name = org.parent.nil?? "nil" : org.parent.name
+        old_parent_name = org.parent.nil? ? "nil" : org.parent.name
         puts "Checking parent for #{org.name}. Old parent is #{old_parent_name}"
         org.update_attributes!(parent: parent)
         puts "Updating parent for #{org.name} from #{old_parent_name} to #{parent.name}"
-      rescue => error
+      rescue StandardError => error
         puts "Parent re-assignment failed for: #{org.name} with error '#{error.message}'"
       end
     else

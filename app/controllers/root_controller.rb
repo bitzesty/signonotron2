@@ -1,10 +1,12 @@
 class RootController < ApplicationController
+  layout "admin_layout"
+
   include UserPermissionsControllerMethods
   before_action :authenticate_user!
   skip_after_action :verify_authorized
 
   def index
-    applications = ::Doorkeeper::Application.can_signin(current_user)
+    applications = ::Doorkeeper::Application.where(show_on_dashboard: true).can_signin(current_user)
 
     @applications_and_permissions = zip_permissions(applications, current_user)
   end

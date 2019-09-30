@@ -1,4 +1,4 @@
-require 'test_helper'
+require "test_helper"
 
 class SuspensionsControllerTest < ActionController::TestCase
   context "organisation admin" do
@@ -101,7 +101,7 @@ class SuspensionsControllerTest < ActionController::TestCase
       another_user.reload
 
       assert_equal false, another_user.suspended?
-      assert_equal nil, another_user.reason_for_suspension
+      assert_nil another_user.reason_for_suspension
     end
   end
 

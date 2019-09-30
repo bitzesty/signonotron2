@@ -1,4 +1,4 @@
-require 'test_helper'
+require "test_helper"
 
 class PermissionUpdaterTest < ActiveSupport::TestCase
   def users_url(application)
@@ -11,9 +11,9 @@ class PermissionUpdaterTest < ActiveSupport::TestCase
     SSOPushCredential.user_email = @sso_push_user.email
 
     @user = create(:user)
-    @application = create(:application, redirect_uri: "https://app.com/callback", with_supported_permissions: ['user_update_permission'])
-    @signin_permission = @user.grant_application_permission(@application, 'signin')
-    @other_permission = @user.grant_application_permission(@application, 'user_update_permission')
+    @application = create(:application, redirect_uri: "https://app.com/callback", with_supported_permissions: %w[user_update_permission])
+    @signin_permission = @user.grant_application_permission(@application, "signin")
+    @other_permission = @user.grant_application_permission(@application, "user_update_permission")
   end
 
   teardown do

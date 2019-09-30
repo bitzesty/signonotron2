@@ -1,4 +1,4 @@
-require 'test_helper'
+require "test_helper"
 
 class BatchInvitationTest < ActiveSupport::TestCase
   include ActiveJob::TestHelper
@@ -20,6 +20,12 @@ class BatchInvitationTest < ActiveSupport::TestCase
     assert_equal bi.organisation, organisation
   end
 
+  should "allow multiple supported permissions of the same to be added" do
+    @bi.grant_permission(@app.signin_permission)
+    @bi.grant_permission(@app.signin_permission)
+    @bi.save!
+  end
+
   context "perform" do
     should "create the users and assign them permissions" do
       @bi.reload.perform
@@ -27,7 +33,7 @@ class BatchInvitationTest < ActiveSupport::TestCase
       user = User.find_by_email("a@m.com")
       assert_not_nil user
       assert_equal "A", user.name
-      assert_equal ["signin"], user.permissions_for(@app)
+      assert_equal %w[signin], user.permissions_for(@app)
     end
 
     should "trigger an invitation email" do

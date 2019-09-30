@@ -1,10 +1,10 @@
-require 'govuk_app_config'
-require_relative 'instance_name'
+require "govuk_app_config"
+require_relative "instance_name"
 
 devise_config = Rails.application.config_for(:devise).symbolize_keys
 
 if devise_config[:secret_key].blank? || devise_config[:pepper].blank?
-  raise 'Required Devise secrets are unset'
+  raise "Required Devise secrets are unset"
 end
 
 # Use this hook to configure devise mailer, warden hooks and so forth.
@@ -22,7 +22,7 @@ Devise.setup do |config|
   # Load and configure the ORM. Supports :active_record (default) and
   # :mongoid (bson_ext recommended) by default. Other ORMs may be
   # available as additional gems.
-  require 'devise/orm/active_record'
+  require "devise/orm/active_record"
 
   # ==> Configuration for any authentication mechanism
   # Configure which keys are used when authenticating a user. The default is
@@ -117,10 +117,10 @@ Devise.setup do |config|
 
   # ==> Configuration for :confirmable
   # A period that the user is allowed to access the website even without
-  # confirming his account. For instance, if set to 2.days, the user will be
-  # able to access the website for two days without confirming his account,
+  # confirming their account. For instance, if set to 2.days, the user will be
+  # able to access the website for two days without confirming their account,
   # access will be blocked just in the third day. Default is 0.days, meaning
-  # the user cannot access the website without confirming his account.
+  # the user cannot access the website without confirming their account.
   # config.allow_unconfirmed_access_for = 2.days
 
   # A period that the user is allowed to confirm their account before their token
@@ -259,10 +259,8 @@ Devise.setup do |config|
   # end
 
   # ==> Custom Modules for Devise
-  require 'devise/models/suspendable'
-  require 'devise/models/password_archivable'
-  require 'devise/models/password_expirable'
-  require 'devise/routes'
+  require "devise/models/suspendable"
+  require "devise/models/password_archivable"
 
   # ==> Password strength test
   # default devise_zxcvbn minimum password score
@@ -273,21 +271,12 @@ Devise.setup do |config|
     GovukStatsd.increment("logins.success")
   end
 
-  Warden::Manager.after_authentication do |user, _auth, _opts|
-    if user.need_change_password?
-      EventLog.record_event(user, EventLog::PASSPHRASE_EXPIRED)
-    end
-  end
-
   Warden::Manager.before_failure do |_env, _opts|
     GovukStatsd.increment("logins.failure")
   end
 
   # ==> Security Extension
   # Configure security extension for devise
-
-  # How often should the password expire (e.g 3.months)
-  config.expire_password_after = 90.days
 
   # Need 1 char of A-Z, a-z and 0-9
   # config.password_regex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z])/

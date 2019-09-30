@@ -1,7 +1,8 @@
 # https://raw.github.com/scambra/devise_invitable/master/app/controllers/devise/invitations_controller.rb
 class InvitationsController < Devise::InvitationsController
   before_action :authenticate_user!
-  after_action :verify_authorized, except: [:edit, :update]
+  after_action :verify_authorized, except: %i[edit update]
+  layout "admin_layout", only: %i[edit update]
 
   include UserPermissionsControllerMethods
   helper_method :applications_and_permissions
@@ -46,9 +47,9 @@ class InvitationsController < Devise::InvitationsController
     redirect_to users_path
   end
 
-  private
+private
 
-  def after_invite_path_for(resource)
+  def after_invite_path_for(_resource)
     users_path
   end
 

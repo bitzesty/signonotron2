@@ -1,55 +1,60 @@
-require "resolv"
+require "ipaddr"
+
 class EventLog < ActiveRecord::Base
   deprecated_columns :event
 
-  LOCKED_DURATION = "#{Devise.unlock_in / 1.hour} #{'hour'.pluralize(Devise.unlock_in / 1.hour)}"
+  LOCKED_DURATION = "#{Devise.unlock_in / 1.hour} #{'hour'.pluralize(Devise.unlock_in / 1.hour)}".freeze
 
   EVENTS = [
-    ACCOUNT_LOCKED                            = LogEntry.new(id: 1, description: "Passphrase verification failed too many times, account locked for #{LOCKED_DURATION}"),
-    ACCOUNT_SUSPENDED                         = LogEntry.new(id: 2, description: "Account suspended", require_initiator: true),
-    ACCOUNT_UNSUSPENDED                       = LogEntry.new(id: 3, description: "Account unsuspended", require_initiator: true),
-    ACCOUNT_AUTOSUSPENDED                     = LogEntry.new(id: 4, description: "Account auto-suspended"),
-    MANUAL_ACCOUNT_UNLOCK                     = LogEntry.new(id: 5, description: "Manual account unlock", require_initiator: true),
-    PASSPHRASE_EXPIRED                        = LogEntry.new(id: 6, description: "Passphrase expired"),
-    PASSPHRASE_RESET_REQUEST                  = LogEntry.new(id: 7, description: "Passphrase reset request"),
-    PASSPHRASE_RESET_LOADED                   = LogEntry.new(id: 8, description: "Passphrase reset page loaded"),
-    PASSPHRASE_RESET_FAILURE                  = LogEntry.new(id: 9, description: "Passphrase reset attempt failure"),
-    SUCCESSFUL_PASSPHRASE_CHANGE              = LogEntry.new(id: 10, description: "Successful passphrase change"),
-    SUCCESSFUL_LOGIN                          = LogEntry.new(id: 11, description: "Successful login"),
-    UNSUCCESSFUL_LOGIN                        = LogEntry.new(id: 12, description: "Unsuccessful login"),
-    SUSPENDED_ACCOUNT_AUTHENTICATED_LOGIN     = LogEntry.new(id: 13, description: "Unsuccessful login attempt to a suspended account, with the correct username and password"),
-    UNSUCCESSFUL_PASSPHRASE_CHANGE            = LogEntry.new(id: 14, description: "Unsuccessful passphrase change"),
-    EMAIL_CHANGED                             = LogEntry.new(id: 15, description: "Email changed", require_initiator: true),
-    EMAIL_CHANGE_INITIATED                    = LogEntry.new(id: 16, description: "Email change initiated"),
-    EMAIL_CHANGE_CONFIRMED                    = LogEntry.new(id: 17, description: "Email change confirmed"),
-    TWO_STEP_ENABLED                          = LogEntry.new(id: 18, description: "2-step verification enabled"),
-    TWO_STEP_RESET                            = LogEntry.new(id: 19, description: "2-step verification reset"),
-    TWO_STEP_ENABLE_FAILED                    = LogEntry.new(id: 20, description: "2-step verification setup failed"),
-    TWO_STEP_VERIFIED                         = LogEntry.new(id: 21, description: "2-step verification successful"),
-    TWO_STEP_VERIFICATION_FAILED              = LogEntry.new(id: 22, description: "2-step verification failed"),
-    TWO_STEP_LOCKED                           = LogEntry.new(id: 23, description: "2-step verification failed too many times, account locked for #{LOCKED_DURATION}"),
-    TWO_STEP_CHANGED                          = LogEntry.new(id: 24, description: "2-step verification phone changed"),
-    TWO_STEP_CHANGE_FAILED                    = LogEntry.new(id: 25, description: "2-step verification phone change failed"),
-    TWO_STEP_PROMPT_DEFERRED                  = LogEntry.new(id: 26, description: "2-step prompt deferred"),
-    API_USER_CREATED                          = LogEntry.new(id: 27, description: "Account created", require_initiator: true),
-    ACCESS_TOKEN_REGENERATED                  = LogEntry.new(id: 28, description: "Access token re-generated", require_application: true),
-    ACCESS_TOKEN_GENERATED                    = LogEntry.new(id: 29, description: "Access token generated", require_application: true, require_initiator: true),
-    ACCESS_TOKEN_REVOKED                      = LogEntry.new(id: 30, description: "Access token revoked", require_application: true, require_initiator: true),
-    PASSPHRASE_RESET_LOADED_BUT_TOKEN_EXPIRED = LogEntry.new(id: 31, description: "Passphrase reset page loaded but the token has expired"),
-    SUCCESSFUL_PASSPHRASE_RESET               = LogEntry.new(id: 32, description: "Passphrase reset successfully"),
-    ROLE_CHANGED                              = LogEntry.new(id: 33, description: "Role changed", require_initiator: true),
-    ACCOUNT_UPDATED                           = LogEntry.new(id: 34, description: "Account updated", require_initiator: true),
-    PERMISSIONS_ADDED                         = LogEntry.new(id: 35, description: "Permissions added", require_initiator: true),
-    PERMISSIONS_REMOVED                       = LogEntry.new(id: 36, description: "Permissions removed", require_initiator: true),
-    ACCOUNT_INVITED                           = LogEntry.new(id: 37, description: "Account was invited", require_initiator: true),
-  ]
+    ACCOUNT_LOCKED = LogEntry.new(id: 1, description: "Password verification failed too many times, account locked for #{LOCKED_DURATION}", require_uid: true),
+    ACCOUNT_SUSPENDED = LogEntry.new(id: 2, description: "Account suspended", require_uid: true, require_initiator: true),
+    ACCOUNT_UNSUSPENDED = LogEntry.new(id: 3, description: "Account unsuspended", require_uid: true, require_initiator: true),
+    ACCOUNT_AUTOSUSPENDED = LogEntry.new(id: 4, description: "Account auto-suspended", require_uid: true),
+    MANUAL_ACCOUNT_UNLOCK = LogEntry.new(id: 5, description: "Manual account unlock", require_uid: true, require_initiator: true),
+    PASSWORD_RESET_REQUEST = LogEntry.new(id: 7, description: "Password reset request", require_uid: true),
+    PASSWORD_RESET_LOADED = LogEntry.new(id: 8, description: "Password reset page loaded", require_uid: true),
+    PASSWORD_RESET_FAILURE = LogEntry.new(id: 9, description: "Password reset attempt failure", require_uid: true),
+    SUCCESSFUL_PASSWORD_CHANGE = LogEntry.new(id: 10, description: "Successful password change", require_uid: true),
+    SUCCESSFUL_LOGIN = LogEntry.new(id: 11, description: "Successful login", require_uid: true),
+    UNSUCCESSFUL_LOGIN = LogEntry.new(id: 12, description: "Unsuccessful login", require_uid: true),
+    SUSPENDED_ACCOUNT_AUTHENTICATED_LOGIN = LogEntry.new(id: 13, description: "Unsuccessful login attempt to a suspended account, with the correct username and password", require_uid: true),
+    UNSUCCESSFUL_PASSWORD_CHANGE = LogEntry.new(id: 14, description: "Unsuccessful password change", require_uid: true),
+    EMAIL_CHANGED = LogEntry.new(id: 15, description: "Email changed", require_uid: true, require_initiator: true),
+    EMAIL_CHANGE_INITIATED = LogEntry.new(id: 16, description: "Email change initiated", require_uid: true),
+    EMAIL_CHANGE_CONFIRMED = LogEntry.new(id: 17, description: "Email change confirmed", require_uid: true),
+    TWO_STEP_ENABLED = LogEntry.new(id: 18, description: "2-step verification enabled", require_uid: true),
+    TWO_STEP_RESET = LogEntry.new(id: 19, description: "2-step verification reset", require_uid: true),
+    TWO_STEP_ENABLE_FAILED = LogEntry.new(id: 20, description: "2-step verification setup failed", require_uid: true),
+    TWO_STEP_VERIFIED = LogEntry.new(id: 21, description: "2-step verification successful", require_uid: true),
+    TWO_STEP_VERIFICATION_FAILED = LogEntry.new(id: 22, description: "2-step verification failed", require_uid: true),
+    TWO_STEP_LOCKED = LogEntry.new(id: 23, description: "2-step verification failed too many times, account locked for #{LOCKED_DURATION}", require_uid: true),
+    TWO_STEP_CHANGED = LogEntry.new(id: 24, description: "2-step verification phone changed", require_uid: true),
+    TWO_STEP_CHANGE_FAILED = LogEntry.new(id: 25, description: "2-step verification phone change failed", require_uid: true),
+    TWO_STEP_PROMPT_DEFERRED = LogEntry.new(id: 26, description: "2-step prompt deferred", require_uid: true),
+    API_USER_CREATED = LogEntry.new(id: 27, description: "Account created", require_uid: true, require_initiator: true),
+    ACCESS_TOKEN_REGENERATED = LogEntry.new(id: 28, description: "Access token re-generated", require_uid: true, require_application: true),
+    ACCESS_TOKEN_GENERATED = LogEntry.new(id: 29, description: "Access token generated", require_uid: true, require_application: true, require_initiator: true),
+    ACCESS_TOKEN_REVOKED = LogEntry.new(id: 30, description: "Access token revoked", require_uid: true, require_application: true, require_initiator: true),
+    PASSWORD_RESET_LOADED_BUT_TOKEN_EXPIRED = LogEntry.new(id: 31, description: "Password reset page loaded but the token has expired", require_uid: true),
+    SUCCESSFUL_PASSWORD_RESET = LogEntry.new(id: 32, description: "Password reset successfully", require_uid: true),
+    ROLE_CHANGED = LogEntry.new(id: 33, description: "Role changed", require_uid: true, require_initiator: true),
+    ACCOUNT_UPDATED = LogEntry.new(id: 34, description: "Account updated", require_uid: true, require_initiator: true),
+    PERMISSIONS_ADDED = LogEntry.new(id: 35, description: "Permissions added", require_uid: true, require_initiator: true),
+    PERMISSIONS_REMOVED = LogEntry.new(id: 36, description: "Permissions removed", require_uid: true, require_initiator: true),
+    ACCOUNT_INVITED = LogEntry.new(id: 37, description: "Account was invited", require_uid: true, require_initiator: true),
+    NO_SUCH_ACCOUNT_LOGIN = LogEntry.new(id: 38, description: "Attempted login to nonexistent account"),
 
-  EVENTS_REQUIRING_INITIATOR   = EVENTS.select(&:require_initiator?)
+    # We no longer expire passwords, but we keep this event for history purposes
+    PASSWORD_EXPIRED = LogEntry.new(id: 6, description: "Password expired"),
+  ].freeze
+
+  EVENTS_REQUIRING_UID = EVENTS.select(&:require_uid?)
+  EVENTS_REQUIRING_INITIATOR = EVENTS.select(&:require_initiator?)
   EVENTS_REQUIRING_APPLICATION = EVENTS.select(&:require_application?)
 
-  VALID_OPTIONS = [:initiator, :application, :application_id, :trailing_message, :ip_address, :user_agent_id]
+  VALID_OPTIONS = %i[initiator application application_id trailing_message ip_address user_agent_id user_agent_string user_email_string].freeze
 
-  validates :uid, presence: true
+  validates_presence_of :uid, if: Proc.new { |event_log| EVENTS_REQUIRING_UID.include? event_log.entry }
   validates_presence_of :event_id
   validate :validate_event_mappable
   validates_presence_of :initiator_id,   if: Proc.new { |event_log| EVENTS_REQUIRING_INITIATOR.include? event_log.entry }
@@ -59,7 +64,9 @@ class EventLog < ActiveRecord::Base
   belongs_to :application, class_name: "Doorkeeper::Application"
   belongs_to :user_agent
 
-  delegate :user_agent_string, to: :user_agent
+  def user_agent_as_string
+    self.user_agent&.user_agent_string || self.user_agent_string
+  end
 
   def event
     entry.description
@@ -73,25 +80,47 @@ class EventLog < ActiveRecord::Base
     self.class.convert_integer_to_ip_address(self.ip_address)
   end
 
+  def send_to_splunk(*)
+    return unless ENV["SPLUNK_EVENT_LOG_ENDPOINT_URL"] && ENV["SPLUNK_EVENT_LOG_ENDPOINT_HEC_TOKEN"]
+
+    event = {
+      timestamp: self.created_at.utc,
+      app: self.application&.name,
+      object_id: self.id,
+      user: self.initiator&.name || self.user_email_string,
+      user_uid: self.uid,
+      src_ip: (self.ip_address_string if self.ip_address.present?),
+      action: self.event,
+      result: self.trailing_message,
+      http_user_agent: self.user_agent_as_string,
+    }
+
+    conn = Faraday.new(ENV["SPLUNK_EVENT_LOG_ENDPOINT_URL"])
+    conn.post do |request|
+      request.headers["Content-Type"] = "application/json"
+      request.headers["Authorization"] = "Splunk #{ENV['SPLUNK_EVENT_LOG_ENDPOINT_HEC_TOKEN']}"
+      request.body = { event: event }.to_json
+    end
+  end
+
   def self.record_event(user, event, options = {})
     if options[:ip_address]
-      if options[:ip_address] =~ Resolv::IPv6::Regex
-        GovukError.notify("Received IP address: #{options[:ip_address]}. IPv6 logging is not supported yet")
-        options[:ip_address] = nil
-      else
-        options[:ip_address] = convert_ip_address_to_integer(options[:ip_address])
-      end
+      options[:ip_address] = convert_ip_address_to_integer(options[:ip_address])
     end
     attributes = {
-      uid: user.uid,
-      event_id: event.id
+      uid: user&.uid,
+      event_id: event.id,
     }.merge!(options.slice(*VALID_OPTIONS))
 
-    EventLog.create!(attributes)
+    event_log_entry = EventLog.create!(attributes)
+
+    SplunkLogStreamingJob.perform_later(event_log_entry.id)
+
+    event_log_entry
   end
 
   def self.record_email_change(user, email_was, email_is, initiator = user)
-    event = (user == initiator) ? EMAIL_CHANGE_INITIATED : EMAIL_CHANGED
+    event = user == initiator ? EMAIL_CHANGE_INITIATED : EMAIL_CHANGED
     record_event(user, event, initiator: initiator, trailing_message: "from #{email_was} to #{email_is}")
   end
 
@@ -104,7 +133,21 @@ class EventLog < ActiveRecord::Base
   end
 
   def self.for(user)
-    EventLog.order('created_at DESC').where(uid: user.uid)
+    EventLog.order("created_at DESC").where(uid: user.uid)
+  end
+
+  def self.convert_ip_address_to_integer(ip_address_string)
+    IPAddr.new(ip_address_string).to_i
+  end
+
+  def self.convert_integer_to_ip_address(integer)
+    if integer.to_s.length == 38
+      # IPv6 address
+      IPAddr.new(integer, Socket::AF_INET6).to_s
+    else
+      # IPv4 address
+      IPAddr.new(integer, Socket::AF_INET).to_s
+    end
   end
 
 private
@@ -113,13 +156,5 @@ private
     unless entry
       errors.add(:event_id, "must have a corresponding `LogEntry` for #{event_id}")
     end
-  end
-
-  def self.convert_ip_address_to_integer(ip_address_string)
-    ip_address_string.split(/\./).map(&:to_i).pack("C*").unpack("N").first
-  end
-
-  def self.convert_integer_to_ip_address(integer)
-    [integer].pack("N").unpack("C*").join "."
   end
 end

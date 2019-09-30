@@ -2,12 +2,11 @@ class Devise::TwoStepVerificationController < DeviseController
   before_action -> { authenticate_user!(force: true) }, only: :prompt
   before_action :prepare_and_validate, except: :prompt
   skip_before_action :handle_two_step_verification
+  layout "admin_layout", only: %w[prompt]
 
   attr_reader :otp_secret_key
-  private :otp_secret_key
 
-  def prompt
-  end
+  def prompt; end
 
   def show
     generate_secret
@@ -16,29 +15,29 @@ class Devise::TwoStepVerificationController < DeviseController
   def update
     mode = current_user.has_2sv? ? :change : :setup
     if verify_code_and_update
-      EventLog.record_event(current_user, success_event_for(mode))
+      EventLog.record_event(current_user, success_event_for(mode), ip_address: user_ip_address)
       send_notification(current_user, mode)
       redirect_to_prior_flow notice: I18n.t("devise.two_step_verification.messages.success.#{mode}")
     else
-      EventLog.record_event(current_user, failure_event_for(mode))
+      EventLog.record_event(current_user, failure_event_for(mode), ip_address: user_ip_address)
       flash.now[:invalid_code] = "Sorry that code didn’t work. Please try again."
       render :show, status: :unprocessable_entity
     end
   end
 
   def otp_secret_key_uri
-    issuer = I18n.t('devise.issuer')
+    issuer = I18n.t("devise.issuer")
     if Rails.application.config.instance_name
       issuer = "#{Rails.application.config.instance_name.titleize} #{issuer}"
     end
 
-    issuer = URI.escape(issuer)
+    issuer = ERB::Util.url_encode(issuer)
     "otpauth://totp/#{issuer}:#{current_user.email}?secret=#{@otp_secret_key.upcase}&issuer=#{issuer}"
   end
 
-  private
+private
 
-  def send_notification(user, mode)
+  def send_notification(_user, mode)
     if mode == :setup
       UserMailer.two_step_enabled(current_user).deliver_later
     else
@@ -68,7 +67,7 @@ class Devise::TwoStepVerificationController < DeviseController
   def verify_code_and_update
     @otp_secret_key = params[:otp_secret_key]
     totp = ROTP::TOTP.new(@otp_secret_key)
-    if totp.verify_with_drift(params[:code], User::MAX_2SV_DRIFT_SECONDS)
+    if totp.verify(params[:code], drift_behind: User::MAX_2SV_DRIFT_SECONDS)
       current_user.update_attribute(:otp_secret_key, @otp_secret_key)
       true
     else
