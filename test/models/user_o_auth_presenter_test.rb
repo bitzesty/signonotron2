@@ -1,8 +1,8 @@
-require 'test_helper'
+require "test_helper"
 
 class UserOAuthPresenterTest < ActiveSupport::TestCase
   setup do
-    @application = create(:application, with_supported_permissions: ['managing_editor'])
+    @application = create(:application, with_supported_permissions: %w[managing_editor])
   end
 
   should "generate JSON" do

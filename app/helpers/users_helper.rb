@@ -1,16 +1,18 @@
 module UsersHelper
   def two_step_status(user)
-    user.has_2sv? ? 'Enabled' : 'Not set up'
+    user.has_2sv? ? "Enabled" : "Not set up"
   end
 
   def organisation_options(form_builder)
     accessible_organisations = policy_scope(Organisation)
-    options_from_collection_for_select(accessible_organisations, :id,
-      :name_with_abbreviation, selected: form_builder.object.organisation_id)
+    options_from_collection_for_select(
+      accessible_organisations, :id, :name_with_abbreviation,
+      selected: form_builder.object.organisation_id
+    )
   end
 
   def organisation_select_options
-    { include_blank: (is_org_admin? || is_super_org_admin?) ? false : 'None' }
+    { include_blank: is_org_admin? || is_super_org_admin? ? false : "None" }
   end
 
   def user_email_tokens(user = current_user)

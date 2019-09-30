@@ -1,4 +1,4 @@
-require 'gds_api/organisations'
+require "gds_api/organisations"
 
 # Whitehall is the canonical source for organisations, so Signon needs to keep
 # its organisations up-to-date in order to provide accurate information on user
@@ -13,14 +13,14 @@ class OrganisationsFetcher
     # Now that any new organisations have been created and any slug changes
     # have been applied, we can safely tie together organisations
     update_ancestry(organisation_relationships)
-  rescue ActiveRecord::RecordInvalid => invalid
-    raise "Couldn't save organisation #{invalid.record.slug} because: #{invalid.record.errors.full_messages.join(',')}"
+  rescue ActiveRecord::RecordInvalid => e
+    raise "Couldn't save organisation #{e.record.slug} because: #{e.record.errors.full_messages.join(',')}"
   end
 
 private
 
   def organisations
-    base_uri = Plek.find('whitehall-admin')
+    base_uri = Plek.new.website_root
     GdsApi::Organisations.new(base_uri).organisations.with_subsequent_pages
   end
 
@@ -38,13 +38,13 @@ private
       name: organisation_data["title"],
       organisation_type: organisation_data["format"],
       abbreviation: organisation_data["details"]["abbreviation"],
-      closed: organisation_data["details"]["govuk_status"] == 'closed',
+      closed: organisation_data["details"]["govuk_status"] == "closed",
     }
     organisation.update_attributes!(update_data)
   end
 
   def child_organisation_slugs(organisation_data)
-    organisation_data["child_organisations"].collect { |child_organisation| child_organisation["id"].split('/').last }
+    organisation_data["child_organisations"].collect { |child_organisation| child_organisation["id"].split("/").last }
   end
 
   def update_ancestry(organisation_relationships)

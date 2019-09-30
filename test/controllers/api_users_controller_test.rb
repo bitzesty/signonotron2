@@ -1,4 +1,4 @@
-require 'test_helper'
+require "test_helper"
 
 class ApiUsersControllerTest < ActionController::TestCase
   context "as admin user" do
@@ -44,15 +44,14 @@ class ApiUsersControllerTest < ActionController::TestCase
 
     context "POST create" do
       should "create a new API user" do
-        assert_difference 'ApiUser.count', 1 do
+        assert_difference "ApiUser.count", 1 do
           post :create, params: { api_user: { name: "Content Store Application", email: "content.store@gov.uk" } }
         end
       end
 
       should "log API user created event in the api users event log" do
         EventLog.stubs(:record_event) # to ignore logs being created, other than the one under test
-        EventLog.expects(:record_event).with(instance_of(ApiUser), EventLog::API_USER_CREATED, initiator: @superadmin)
-
+        EventLog.expects(:record_event).with(instance_of(ApiUser), EventLog::API_USER_CREATED, initiator: @superadmin, ip_address: request.remote_ip)
         post :create, params: { api_user: { name: "Content Store Application", email: "content.store@gov.uk" } }
       end
 
@@ -103,7 +102,8 @@ class ApiUsersControllerTest < ActionController::TestCase
 
         put :update, params: {
           "id" => api_user.id, "api_user" => { "name" => api_user.name, "email" => api_user.email,
-            "permissions_attributes" => { "0" => { "application_id" => application.id, "id" => "", "permissions" => ["admin"] } } } }
+            "permissions_attributes" => { "0" => { "application_id" => application.id, "id" => "", "permissions" => %w[admin] } } }
+}
       end
     end
   end

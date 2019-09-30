@@ -1,8 +1,8 @@
-require 'test_helper'
-require 'helpers/passphrase_support'
+require "test_helper"
+require "support/password_helpers"
 
 class EventLogPageIntegrationTest < ActionDispatch::IntegrationTest
-  include PassPhraseSupport
+  include PasswordHelpers
 
   setup do
     @admin = create(:admin_user, name: "Admin User")
@@ -13,8 +13,8 @@ class EventLogPageIntegrationTest < ActionDispatch::IntegrationTest
     visit root_path
     signin_with(@user)
 
-    click_link "Change your email or passphrase"
-    assert page.has_no_link? 'Account access log'
+    click_link "Change your email or password"
+    assert page.has_no_link? "Account access log"
   end
 
   test "admins have permission to view account access log" do
@@ -22,7 +22,7 @@ class EventLogPageIntegrationTest < ActionDispatch::IntegrationTest
     visit root_path
     signin_with(@admin)
     visit edit_user_path(@user)
-    click_on 'Account access log'
+    click_on "Account access log"
 
     assert_account_access_log_page_content(@user)
   end
@@ -34,7 +34,7 @@ class EventLogPageIntegrationTest < ActionDispatch::IntegrationTest
     visit root_path
     signin_with(super_nintendo_chalmers)
     visit edit_user_path(@user)
-    click_on 'Account access log'
+    click_on "Account access log"
 
     assert_account_access_log_page_content(@user)
   end
@@ -47,7 +47,7 @@ class EventLogPageIntegrationTest < ActionDispatch::IntegrationTest
     visit root_path
     signin_with(super_org_admin)
     visit edit_user_path(user)
-    click_on 'Account access log'
+    click_on "Account access log"
 
     assert_account_access_log_page_content(user)
   end
@@ -61,7 +61,7 @@ class EventLogPageIntegrationTest < ActionDispatch::IntegrationTest
     visit root_path
     signin_with(super_org_admin)
     visit edit_user_path(user)
-    click_on 'Account access log'
+    click_on "Account access log"
 
     assert_account_access_log_page_content(user)
   end
@@ -84,7 +84,7 @@ class EventLogPageIntegrationTest < ActionDispatch::IntegrationTest
     visit root_path
     signin_with(organisation_admin)
     visit edit_user_path(user)
-    click_on 'Account access log'
+    click_on "Account access log"
 
     assert_account_access_log_page_content(user)
   end
@@ -109,17 +109,17 @@ class EventLogPageIntegrationTest < ActionDispatch::IntegrationTest
 
     visit event_logs_user_path(@user)
 
-    assert_text 'Successful login'
+    assert_text "Successful login"
 
     first("a[rel=next]").click
 
-    assert_text 'Successful login'
+    assert_text "Successful login"
   end
 
   def assert_account_access_log_page_content(user)
-    assert_text 'Time'
-    assert_text 'Event'
-    assert_text 'account locked'
+    assert_text "Time"
+    assert_text "Event"
+    assert_text "account locked"
     assert_selector "a", text: user.name
   end
 end

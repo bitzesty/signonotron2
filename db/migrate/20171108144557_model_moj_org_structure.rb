@@ -45,7 +45,7 @@ class ModelMojOrgStructure < ActiveRecord::Migration
             "Tribunal Procedure Committee",
             "Victims' Advisory Panel",
             "Victims' Commissioner",
-            "Youth Justice Board for England and Wales"
+            "Youth Justice Board for England and Wales",
         ],
         hmcts => [
             "Bankruptcy Court",
@@ -84,9 +84,9 @@ class ModelMojOrgStructure < ActiveRecord::Migration
             "Court of Appeal Criminal Division",
             "Queen's Bench Division of the High Court",
             "Administrative Court",
-            "Chancery Division of the High Court"
+            "Chancery Division of the High Court",
         ],
-        noms => ["National Probation Service"]
+        noms => ["National Probation Service"],
     }
 
     closed_child_org_names = [
@@ -102,7 +102,7 @@ class ModelMojOrgStructure < ActiveRecord::Migration
         "Office for Criminal Justice Reform",
         "Office of the Lay Observer",
         "Office of the Legal Services Complaints Commissioner",
-        "Office of the Legal Services Ombudsman"
+        "Office of the Legal Services Ombudsman",
     ]
 
     missing_orgs = []
@@ -145,11 +145,11 @@ class ModelMojOrgStructure < ActiveRecord::Migration
   def update_parent(org, parent)
     if org.parent != parent
       begin
-        old_parent_name = org.parent.nil?? "nil" : org.parent.name
+        old_parent_name = org.parent.nil? ? "nil" : org.parent.name
         puts "Checking parent for #{org.name}. Old parent is #{old_parent_name}"
         org.update_attributes!(parent: parent)
         puts "Updating parent for #{org.name} from #{old_parent_name} to #{parent.name}"
-      rescue => error
+      rescue StandardError => error
         puts "Parent re-assignment failed for: #{org.name} with error '#{error.message}'"
       end
     else

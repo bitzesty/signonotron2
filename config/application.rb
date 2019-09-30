@@ -1,7 +1,14 @@
-require_relative 'boot'
+require_relative "boot"
 
-require 'rails/all'
-require_relative '../lib/same_site_security/middleware'
+require "active_record/railtie"
+require "action_controller/railtie"
+require "action_view/railtie"
+require "action_mailer/railtie"
+require "active_job/railtie"
+require "rails/test_unit/railtie"
+require "sprockets/railtie"
+
+require_relative "../lib/same_site_security/middleware"
 
 # Require the gems listed in Gemfile, including any gems
 # you've limited to :test, :development, or :production.
@@ -21,7 +28,7 @@ module Signon
 
     # Set Time.zone default to the specified zone and make Active Record auto-convert to this zone.
     # Run "rake -D time" for a list of tasks for finding time zone names. Default is UTC.
-    config.time_zone = 'London'
+    config.time_zone = "London"
 
     # The default locale is :en and all translations from config/locales/*.rb,yml are auto loaded.
     # config.i18n.load_path += Dir[Rails.root.join('my', 'locales', '*.{rb,yml}').to_s]
@@ -38,7 +45,7 @@ module Signon
 
     # Enable the asset pipeline
     config.assets.enabled = true
-    config.assets.version = '1.0'
+    config.assets.version = "1.0"
 
     #config.middleware.insert_before Warden::Manager, Slimmer::App, config.slimmer.to_hash
 
@@ -49,14 +56,11 @@ module Signon
     # disabling it solves the above problem and doesn't give us additional risk.
     config.action_dispatch.ip_spoofing_check = false
 
-    # Precompile additional assets (application.js, application.css, and all non-JS/CSS are already added)
-    config.assets.precompile += %w(password-strength-indicator.js)
-
     config.to_prepare do
       Doorkeeper::ApplicationController.layout "application"
     end
 
-    config.eager_load_paths << Rails.root.join('lib')
+    config.eager_load_paths << Rails.root.join("lib")
 
     config.active_job.queue_adapter = :sidekiq
 

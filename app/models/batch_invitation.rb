@@ -1,6 +1,4 @@
 class BatchInvitation < ActiveRecord::Base
-  include ActiveModel::ForbiddenAttributesProtection
-
   belongs_to :user
   belongs_to :organisation
   has_many :batch_invitation_users, -> { order(:name) }
@@ -19,7 +17,7 @@ class BatchInvitation < ActiveRecord::Base
   end
 
   def all_successful?
-    batch_invitation_users.failed.count == 0
+    batch_invitation_users.failed.count.zero?
   end
 
   def enqueue
@@ -27,7 +25,7 @@ class BatchInvitation < ActiveRecord::Base
     BatchInvitationJob.perform_later(self.id)
   end
 
-  def perform(options = {})
+  def perform(_options = {})
     self.batch_invitation_users.unprocessed.each do |bi_user|
       bi_user.invite(user, supported_permission_ids)
     end
@@ -36,5 +34,9 @@ class BatchInvitation < ActiveRecord::Base
   rescue StandardError => e
     self.update_column(:outcome, "fail")
     raise
+  end
+
+  def grant_permission(supported_permission)
+    supported_permissions << supported_permission unless supported_permissions.include?(supported_permission)
   end
 end

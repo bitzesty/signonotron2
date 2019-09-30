@@ -1,9 +1,9 @@
-require 'test_helper'
+require "test_helper"
 
 class SessionTimeoutTest < ActionDispatch::IntegrationTest
   setup do
     @user_email = "email@example.com"
-    @user_password = "some passphrase with various $ymb0l$"
+    @user_password = "some password with various $ymb0l$"
     @user = create(:user, email: @user_email, password: @user_password)
   end
 
@@ -14,7 +14,7 @@ class SessionTimeoutTest < ActionDispatch::IntegrationTest
     end
 
     visit "/users/sign_in"
-    refute_response_contains "You are already signed in"
+
     assert_response_contains "Sign in"
   end
 end

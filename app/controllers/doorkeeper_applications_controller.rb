@@ -4,6 +4,8 @@ class DoorkeeperApplicationsController < ApplicationController
 
   respond_to :html
 
+  layout "admin_layout", only: %w[index edit update]
+
   def index
     authorize Doorkeeper::Application
     @applications = Doorkeeper::Application.all
@@ -22,7 +24,7 @@ class DoorkeeperApplicationsController < ApplicationController
     @users = query.page(params[:page]).per(100)
   end
 
-  private
+private
 
   def load_and_authorize_application
     @application = Doorkeeper::Application.find(params[:id])
@@ -41,6 +43,7 @@ class DoorkeeperApplicationsController < ApplicationController
       :retired,
       :home_uri,
       :supports_push_updates,
+      :show_on_dashboard,
     )
   end
 end

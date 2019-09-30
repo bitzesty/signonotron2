@@ -1,4 +1,4 @@
-require 'csv'
+require "csv"
 
 class BatchInvitationsController < ApplicationController
   include UserPermissionsControllerMethods
@@ -31,7 +31,7 @@ class BatchInvitationsController < ApplicationController
       render :new
       return
     end
-    if csv.size < 1 # headers: true means .size is the number of data rows
+    if csv.empty?
       flash[:alert] = "CSV had no rows."
       render :new
       return
@@ -41,12 +41,13 @@ class BatchInvitationsController < ApplicationController
       return
     end
 
-    @batch_invitation.save
+    @batch_invitation.save!
+
     csv.each do |row|
       batch_user_args = {
         batch_invitation: @batch_invitation,
         name: row["Name"],
-        email: row["Email"]
+        email: row["Email"],
       }
       if policy(@batch_invitation).assign_organisation_from_csv?
         batch_user_args[:organisation_slug] = row["Organisation"]
@@ -63,10 +64,10 @@ class BatchInvitationsController < ApplicationController
     authorize @batch_invitation
   end
 
-  private
+private
 
   def recent_batch_invitations
-    @_recent_batch_invitations ||= BatchInvitation.where("created_at > '#{3.days.ago}'").order("created_at desc")
+    @recent_batch_invitations ||= BatchInvitation.where("created_at > ?", 3.days.ago).order("created_at desc")
   end
 
   def file_uploaded?
@@ -82,7 +83,7 @@ class BatchInvitationsController < ApplicationController
 
   def grant_default_permissions(batch_invitation)
     SupportedPermission.default.each do |default_permission|
-      batch_invitation.supported_permissions << default_permission
+      batch_invitation.grant_permission(default_permission)
     end
   end
 end

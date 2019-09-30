@@ -1,8 +1,8 @@
 class ModelModOrgStructure < ActiveRecord::Migration
   def up
-    mod = Organisation.find_by(name: 'Ministry of Defence')
-    dstl = Organisation.find_by(name: 'Defence Science and Technology Laboratory')
-    ukho = Organisation.find_by(name: 'UK Hydrographic Office')
+    mod = Organisation.find_by(name: "Ministry of Defence")
+    dstl = Organisation.find_by(name: "Defence Science and Technology Laboratory")
+    ukho = Organisation.find_by(name: "UK Hydrographic Office")
 
     parent_child_orgs = {
         mod => [
@@ -49,10 +49,10 @@ class ModelModOrgStructure < ActiveRecord::Migration
             "UK Hydrographic Office",
             "Veterans Advisory and Pensions Committees",
             "Veterans UK",
-            "United Kingdom Reserve Forces Association"
+            "United Kingdom Reserve Forces Association",
         ],
         dstl => ["Centre for Defence Enterprise", "Defence and Security Accelerator"],
-        ukho => ["HM Nautical Almanac Office"]
+        ukho => ["HM Nautical Almanac Office"],
     }
 
     closed_child_org_names = [
@@ -73,7 +73,7 @@ class ModelModOrgStructure < ActiveRecord::Migration
         "Ministry of Defence Police and Guarding Agency",
         "People, Pay and Pensions Agency",
         "Warship Support Agency",
-        "Armed Forces Personnel Administration Agency"
+        "Armed Forces Personnel Administration Agency",
     ]
 
     missing_orgs = []
@@ -116,11 +116,11 @@ class ModelModOrgStructure < ActiveRecord::Migration
   def update_parent(org, parent)
     if org.parent != parent
       begin
-        old_parent_name = org.parent.nil?? "nil" : org.parent.name
+        old_parent_name = org.parent.nil? ? "nil" : org.parent.name
         puts "Checking parent for #{org.name}. Old parent is #{old_parent_name}"
         org.update_attributes!(parent: parent)
         puts "Updating parent for #{org.name} from #{old_parent_name} to #{parent.name}"
-      rescue => error
+      rescue StandardError => error
         puts "Parent re-assignment failed for: #{org.name} with error '#{error.message}'"
       end
     else

@@ -1,6 +1,6 @@
-require_relative './metrics'
-require 'numbers/user_segments'
-require 'csv'
+require_relative "./metrics"
+require "numbers/user_segments"
+require "csv"
 
 class NumbersCsv
   def self.generate
@@ -8,7 +8,7 @@ class NumbersCsv
       Metrics.new.to_a.each { |line| csv << line }
     end
 
-    all_users = User.includes({application_permissions: :application}, :organisation).to_a
+    all_users = User.includes({ application_permissions: :application }, :organisation).to_a
     segments = UserSegments.new(all_users)
 
     CSV.open("numbers.licensing.csv", "w") do |csv|

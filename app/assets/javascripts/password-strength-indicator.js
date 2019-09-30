@@ -1,5 +1,4 @@
 //= require zxcvbn
-//= require jquery-debounce
 
 (function() {
   "use strict"
@@ -17,7 +16,7 @@
             passwordConfirmation = $(options["password_confirmation_field"]).val();
         instance.updateIndicator(password, passwordConfirmation, options);
       };
-      $(password_field).debounce("keyup", update, 50);
+      $(password_field).on("input", update);
     });
 
     $(options["password_strength_guidance"]).attr("aria-live", "polite").attr("aria-atomic", "true");
@@ -32,7 +31,7 @@
         guidance.push('password-too-short');
       }
 
-      var isPasswordNotStrongEnough = (result.score < options["strong_passphrase_boundary"]);
+      var isPasswordNotStrongEnough = (result.score < options["strong_password_boundary"]);
 
       var aWeakWordFoundInPassword = $(options["weak_words"]).is(function(i, weak_word) {
         return (password.indexOf(weak_word) >= 0);
@@ -78,6 +77,10 @@
 }).call(this);
 
 $(function() {
+  // Reposition the error messages between the label and input
+  $("#password-guidance").detach().insertAfter('#password-control-group label')
+  $("#password-confirmation-guidance").detach().insertAfter('#password-confirmation-control-group label')
+
   $("form #password-control-group input[type=password]").each(function(){
     var $passwordChangePanel = $('#password-change-panel');
 
@@ -92,7 +95,7 @@ $(function() {
       password_confirmation_guidance: $('#password-confirmation-guidance'),
 
       weak_words: $passwordField.data('weak-words').split(","),
-      strong_passphrase_boundary: 4,
+      strong_password_boundary: 4,
       min_password_length: $passwordField.data('min-password-length'),
 
       update_indicator: function(guidance, strengthScore) {
@@ -101,38 +104,8 @@ $(function() {
         $passwordChangePanel.removeClass(GOVUK.passwordStrengthPossibleGuidance.join(" "));
         $passwordChangePanel.addClass(guidance.join(" "));
 
-        if ($passwordField.val().length == 0) {
-          $passwordField.attr('aria-invalid', "true");
-          $('#password-result').removeClass('glyphicon-remove').addClass('glyphicon-ok');
-        } else if ($.inArray('good-password', guidance) >= 0) {
-          $passwordField.attr('aria-invalid', "false");
-          $('#password-result').removeClass('glyphicon-remove').addClass('glyphicon glyphicon-ok');
-        } else {
-          $passwordField.attr('aria-invalid', "true");
-          $('#password-result').removeClass('glyphicon glyphicon-ok').addClass('glyphicon glyphicon-remove');
-        }
-
         $passwordChangePanel.removeClass(GOVUK.passwordConfirmationPossibleGuidance.join(" "));
         $passwordChangePanel.addClass(guidance.join(" "));
-
-        var indicator = $('#password-confirmation-result');
-
-        if ($passwordConfirmationField.val().length == 0) {
-          indicator.attr('aria-invalid', "true");
-          indicator.removeClass('glyphicon-remove').addClass('glyphicon-ok');
-        } else if ($.inArray('confirmation-not-matching', guidance) >= 0) {
-          $passwordConfirmationField.attr('aria-invalid', "true");
-          indicator.removeClass('glyphicon glyphicon-ok').addClass('glyphicon glyphicon-remove');
-          indicator.parent().removeClass('confirmation-matching');
-        } else if ($.inArray('confirmation-matching', guidance) >= 0) {
-          $passwordConfirmationField.attr('aria-invalid', "false");
-          indicator.removeClass('glyphicon glyphicon-remove');
-          // Add tick only if password field is also valid.
-          if($.inArray('good-password', guidance) >= 0) {
-            indicator.addClass('glyphicon glyphicon-ok');
-            indicator.parent().addClass('confirmation-matching');
-          }
-        }
       }
     });
   });

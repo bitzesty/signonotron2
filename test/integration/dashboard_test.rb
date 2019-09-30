@@ -1,13 +1,16 @@
 #encoding: utf-8
-require 'test_helper'
+
+require "test_helper"
 
 class DashboardTest < ActionDispatch::IntegrationTest
   should "notify the user if they've not been assigned any applications" do
-    user = create(:user)
+    app = create(:application, name: "MyApp", show_on_dashboard: false)
+    user = create(:user, with_signin_permissions_for: [app])
+
     visit root_path
     signin_with(user)
 
-    assert_response_contains("Your Applications")
+    assert_response_contains("Your applications")
     assert_response_contains("You haven’t been assigned to any applications yet")
   end
 
@@ -38,7 +41,8 @@ class DashboardTest < ActionDispatch::IntegrationTest
       visit root_path
       signin_with(user)
 
-      assert has_link?("Make your account more secure")
+      assert_response_contains("Make your account more secure")
+      assert has_link?("Set up 2-step verification")
     end
   end
 end

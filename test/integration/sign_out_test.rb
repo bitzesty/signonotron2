@@ -1,8 +1,8 @@
-require 'test_helper'
+require "test_helper"
 
 class SignOutTest < ActionDispatch::IntegrationTest
   setup do
-    @user = create(:user_in_organisation, email: "email@example.com", password: "some passphrase with various $ymb0l$")
+    @user = create(:user_in_organisation, email: "email@example.com", password: "some password with various $ymb0l$")
     visit root_path
   end
 
@@ -10,10 +10,9 @@ class SignOutTest < ActionDispatch::IntegrationTest
     signin_with(@user)
     ReauthEnforcer.expects(:perform_on).with(@user).once
 
-    within("main") do
-      click_link "Sign out"
-    end
-    assert_response_contains("Signed out successfully.")
+    click_link "Sign out"
+
+    assert_response_contains("Sign in to GOV.UK")
   end
 
   should "not blow up if not already signed in" do
