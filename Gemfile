@@ -44,6 +44,9 @@ gem 'govuk_publishing_components', '~> 17'
 # gem 'govuk_sidekiq', '~> 3'
 gem 'plek', '~> 3'
 
+gem "aws-sdk", "~> 2"
+gem "aws-sdk-rails", ">= 1.0.1"
+
 group :development do
   gem 'better_errors', '2.5.1'
   gem 'binding_of_caller', '0.8.0'
