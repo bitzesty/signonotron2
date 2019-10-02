@@ -13,8 +13,7 @@ module Healthcheck
                  application_id,
                  revoked_at,
                  (oauth_access_tokens.expires_in -
-                 (unix_timestamp(now()) -
-                  unix_timestamp(oauth_access_tokens.created_at))) as expires_in
+                 (extract(epoch from now()) - extract(epoch from oauth_access_tokens.created_at))) as expires_in
           FROM oauth_access_tokens
         ) tokens
       INNER JOIN users ON users.id = tokens.resource_owner_id
