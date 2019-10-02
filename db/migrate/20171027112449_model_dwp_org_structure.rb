@@ -1,4 +1,4 @@
-class ModelDwpOrgStructure < ActiveRecord::Migration
+class ModelDwpOrgStructure < ActiveRecord::Migration[5.1][5.0]
   def up
     dwp = Organisation.find_by(name: "Department for Work and Pensions")
 

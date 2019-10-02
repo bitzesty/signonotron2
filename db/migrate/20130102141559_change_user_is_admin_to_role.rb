@@ -1,4 +1,4 @@
-class ChangeUserIsAdminToRole < ActiveRecord::Migration
+class ChangeUserIsAdminToRole < ActiveRecord::Migration[5.1][5.0]
   class User < ActiveRecord::Base; end
 
   def up

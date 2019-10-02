@@ -24,10 +24,11 @@ gem 'pg', '~> 1'
 gem 'pundit', '~> 2'
 gem 'rails-html-sanitizer', '~> 1'
 gem 'rake', '~> 12'
-gem 'redis', '~> 4'
+gem 'redis-rails'
 gem 'rotp', '~> 5'
 gem 'rqrcode'
 gem 'sass-rails', '~> 5'
+gem 'sidekiq', '~> 5.2'
 gem 'sprockets-rails', '~> 3'
 gem 'uglifier', '~> 4'
 gem 'uuid'
@@ -40,7 +41,7 @@ gem 'gds-api-adapters', '~> 60'
 gem 'govuk_admin_template', '~> 6'
 gem 'govuk_app_config', '~> 2'
 gem 'govuk_publishing_components', '~> 17'
-gem 'govuk_sidekiq', '~> 3'
+# gem 'govuk_sidekiq', '~> 3'
 gem 'plek', '~> 3'
 
 group :development do
@@ -52,6 +53,7 @@ group :development, :test do
   gem 'govuk-lint', '~> 4'
   gem 'jasmine', '~> 3'
   gem 'pry-byebug'
+  gem 'dotenv-rails'
 end
 
 group :test do
@@ -65,4 +67,8 @@ group :test do
   gem 'shoulda-context', '~> 1', require: false
   gem 'timecop', '~> 0.9'
   gem 'webmock', '~> 3'
+end
+
+group :production do
+  gem 'rails_12factor'
 end

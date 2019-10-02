@@ -1,4 +1,4 @@
-class ModelDfidOrgStructure < ActiveRecord::Migration
+class ModelDfidOrgStructure < ActiveRecord::Migration[5.1][5.0]
   def up
     dfid = Organisation.find_by(name: "Department for International Development")
 

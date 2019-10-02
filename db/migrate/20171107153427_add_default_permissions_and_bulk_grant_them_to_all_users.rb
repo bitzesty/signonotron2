@@ -1,24 +1,24 @@
 require "enhancements/application"
 
-class AddDefaultPermissionsAndBulkGrantThemToAllUsers < ActiveRecord::Migration
+class AddDefaultPermissionsAndBulkGrantThemToAllUsers < ActiveRecord::Migration[5.1][5.0]
   def up
-    support_app = Doorkeeper::Application.find_by!(name: "Support")
-    content_preview_app = Doorkeeper::Application.find_by!(name: "Content Preview")
-
-    say_with_time "Marking signin on support and content preview as default permissions" do
-      support_app.signin_permission.update_attributes(default: true)
-
-      content_preview_app.signin_permission.update_attributes(default: true)
-    end
-
-    say_with_time "Enqueuing bulk grant permissions job as a super admin to make sure all existing users have the default permissions" do
-      superadmin = User.with_status("active").where(role: "superadmin").first
-      bulk_grant = BulkGrantPermissionSet.create!(
-        user: superadmin,
-        supported_permission_ids: [support_app.signin_permission.id, content_preview_app.signin_permission.id],
-      )
-      bulk_grant.enqueue
-    end
+    # support_app = Doorkeeper::Application.find_by!(name: "Support")
+    # content_preview_app = Doorkeeper::Application.find_by!(name: "Content Preview")
+    #
+    # say_with_time "Marking signin on support and content preview as default permissions" do
+    #   support_app.signin_permission.update_attributes(default: true)
+    #
+    #   content_preview_app.signin_permission.update_attributes(default: true)
+    # end
+    #
+    # say_with_time "Enqueuing bulk grant permissions job as a super admin to make sure all existing users have the default permissions" do
+    #   superadmin = User.with_status("active").where(role: "superadmin").first
+    #   bulk_grant = BulkGrantPermissionSet.create!(
+    #     user: superadmin,
+    #     supported_permission_ids: [support_app.signin_permission.id, content_preview_app.signin_permission.id],
+    #   )
+    #   bulk_grant.enqueue
+    # end
   end
 
   def down

@@ -1,4 +1,4 @@
-class ModelModOrgStructure < ActiveRecord::Migration
+class ModelModOrgStructure < ActiveRecord::Migration[5.1][5.0]
   def up
     mod = Organisation.find_by(name: "Ministry of Defence")
     dstl = Organisation.find_by(name: "Defence Science and Technology Laboratory")

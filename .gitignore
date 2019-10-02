@@ -23,3 +23,12 @@
 # Simplecov
 coverage/*
 test/reports/*
+
+.idea*
+REVISION
+*_manifest.yml
+*_manifest*.yml
+
+# RVM
+.ruby-gemset
+

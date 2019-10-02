@@ -1,4 +1,4 @@
-class ModelWelshGovOrgStructure < ActiveRecord::Migration
+class ModelWelshGovOrgStructure < ActiveRecord::Migration[5.1][5.0]
   def up
     wg = Organisation.find_by(name: "Welsh Government")
 

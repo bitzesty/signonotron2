@@ -1,4 +1,4 @@
-class UpdateApiUserInUsers < ActiveRecord::Migration
+class UpdateApiUserInUsers < ActiveRecord::Migration[5.1][5.0]
   def up
     User.joins(:authorisations)
         .where("oauth_access_tokens.expires_in > ?", 5.years.to_i)
