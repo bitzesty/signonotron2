@@ -69,9 +69,12 @@ ActiveRecord::Schema.define(version: 2019_09_03_120837) do
     t.integer "application_id"
     t.string "trailing_message"
     t.integer "event_id"
+    t.decimal "ip_address", precision: 38
+    t.integer "user_agent_id"
     t.string "user_agent_string"
     t.string "user_email_string"
     t.index ["uid", "created_at"], name: "index_event_logs_on_uid_and_created_at"
+    t.index ["user_agent_id"], name: "event_logs_user_agent_id_fk"
   end
 
   create_table "oauth_access_grants", id: :serial, force: :cascade do |t|

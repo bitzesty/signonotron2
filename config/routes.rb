@@ -1,3 +1,5 @@
+require 'sidekiq/web'
+
 Rails.application.routes.draw do
   get "/healthcheck", to: GovukHealthcheck.rack_response(
     GovukHealthcheck::SidekiqRedis,
@@ -70,6 +72,10 @@ Rails.application.routes.draw do
   post "oauth/access_token" => "doorkeeper/tokens#create"
 
   get "/signin-required" => "root#signin_required"
+
+  authenticate :user do
+    mount Sidekiq::Web => '/sidekiq'
+  end
 
   root to: "root#index"
 end
