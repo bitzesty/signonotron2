@@ -2,6 +2,7 @@ require "test_helper"
 
 class BatchInvitingUsersTest < ActionDispatch::IntegrationTest
   include ActiveJob::TestHelper
+  include MailerHelper # <- gives us access to the same `reply_to_domain` method that is used by `NoisyBatchInvitation`
 
   setup do
     @cabinet_office = create(:organisation, slug: "cabinet-office", name: "Cabinet Office")
@@ -128,7 +129,7 @@ class BatchInvitingUsersTest < ActionDispatch::IntegrationTest
     end
     invite_email = last_email_for(email)
     assert_not_nil invite_email
-    assert_equal "noreply-signon-development@digital.cabinet-office.gov.uk", invite_email.from[0]
+    assert_equal "noreply-signon-development@#{reply_to_domain}", invite_email.from[0]
     assert_nil invite_email.reply_to[0]
 
     assert_match "Please confirm your account", invite_email.subject

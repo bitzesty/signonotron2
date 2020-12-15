@@ -21,7 +21,7 @@ class UserUpdateTest < ActionView::TestCase
     app = create(:application, name: "App", with_supported_permissions: ["Editor", "signin", "Something Else"])
     affected_user.grant_application_permission(app, "Something Else")
 
-    perms = app.supported_permissions.first(2).map(&:id)
+    perms = app.supported_permissions.where(name: %w[Editor signin]).map(&:id)
     params = { supported_permission_ids: perms }
     UserUpdate.new(affected_user, params, current_user, ip_address).update
 
