@@ -3,6 +3,10 @@ class PasswordsController < Devise::PasswordsController
   before_action :record_password_reset_request, only: :create
   before_action :record_reset_page_loaded, only: :edit
 
+  def create
+    super
+  end
+
   def edit
     super
 
@@ -26,7 +30,7 @@ class PasswordsController < Devise::PasswordsController
 private
 
   def record_password_reset_request
-    user = User.find_by_email(params[:user][:email]) if params[:user].present?
+    user = User.find_by(email: params[:user][:email]) if params[:user].present?
     EventLog.record_event(user, EventLog::PASSWORD_RESET_REQUEST, ip_address: user_ip_address) if user
     GovukStatsd.increment("users.password_reset_request")
   end

@@ -10,7 +10,7 @@ module UserFilterHelper
   end
 
   def two_step_abbr_tag
-    content_tag(:abbr, "2SV", title: "Two step verification")
+    tag.abbr("2SV", title: "Two step verification")
   end
 
   def title_from(filter_type)
@@ -25,6 +25,12 @@ module UserFilterHelper
     items = case filter_type
             when :role
               filtered_user_roles
+            when :permission
+              Doorkeeper::Application
+                .joins(:supported_permissions)
+                .order("oauth_applications.name", "supported_permissions.name")
+                .pluck("supported_permissions.id", "oauth_applications.name", "supported_permissions.name")
+                .map { |e| [e[0], "#{e[1]} #{e[2]}"] }
             when :status
               User::USER_STATUSES
             when :organisation
@@ -47,14 +53,18 @@ module UserFilterHelper
         item_id = item[0].to_s
         item_name = item[1]
       end
-      content_tag(:li,
-                  link_to(item_name, current_path_with_filter(filter_type, item_id)),
-                  class: params[filter_type] == item_id ? "active" : "")
+      tag.li(
+        link_to(item_name, current_path_with_filter(filter_type, item_id)),
+        class: params[filter_type] == item_id ? "active" : "",
+      )
     end
 
-    list_items << content_tag(:li,
-                              link_to("All #{title_from(filter_type).pluralize}".html_safe,
-                                      current_path_with_filter(filter_type, nil)))
+    list_items << tag.li(
+      link_to(
+        "All #{title_from(filter_type).pluralize}".html_safe,
+        current_path_with_filter(filter_type, nil),
+      ),
+    )
 
     list_items.join("\n").html_safe
   end
@@ -71,10 +81,16 @@ module UserFilterHelper
     when :organisation
       org = Organisation.find(value)
       if org.abbreviation.presence
-        content_tag(:abbr, org.abbreviation, title: org.name)
+        tag.abbr(org.abbreviation, title: org.name)
       else
         org.name
       end
+    when :permission
+      Doorkeeper::Application
+        .joins(:supported_permissions)
+        .where("supported_permissions.id = ?", value)
+        .pick("oauth_applications.name", "supported_permissions.name")
+        .join(" ")
     when :two_step_status
       if value == "true"
         "Enabled"
@@ -87,6 +103,10 @@ module UserFilterHelper
   end
 
   def any_filter?
-    params[:filter].present? || params[:role].present? || params[:status].present? || params[:organisation].present?
+    params[:filter].present? ||
+      params[:role].present? ||
+      params[:permission].present? ||
+      params[:status].present? ||
+      params[:organisation].present?
   end
 end

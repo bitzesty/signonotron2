@@ -32,15 +32,15 @@ class UserPermissionsExporter
       applications.each do |app|
         users.each do |user|
           permissions = user.permissions_for(app)
-          if permissions.present?
-            row = {}
-            row["Application"] = app.name if multiple_apps?
-            row["Name"] = user.name
-            row["Email"] = user.email
-            row["Organisation"] = user.organisation.name if user.organisation
-            row["Permissions"] = permissions.join(",")
-            csv << row
-          end
+          next if permissions.blank?
+
+          row = {}
+          row["Application"] = app.name if multiple_apps?
+          row["Name"] = user.name
+          row["Email"] = user.email
+          row["Organisation"] = user.organisation.name if user.organisation
+          row["Permissions"] = permissions.join(",")
+          csv << row
         end
       end
     end
@@ -56,7 +56,6 @@ class UserPermissionsExporter
     File.join(export_dir, file_name)
   end
 
-
 private
 
   def multiple_apps?
@@ -64,7 +63,7 @@ private
   end
 
   def headers
-    headings = %w(Name Email Organisation Permissions)
+    headings = %w[Name Email Organisation Permissions]
     headings.unshift "Application" if multiple_apps?
     headings
   end

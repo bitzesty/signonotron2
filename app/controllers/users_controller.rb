@@ -3,7 +3,7 @@ require "csv"
 class UsersController < ApplicationController
   include UserPermissionsControllerMethods
 
-  layout "admin_layout", only: %w(edit_email_or_password)
+  layout "admin_layout", only: %w[edit_email_or_password]
 
   before_action :authenticate_user!, except: :show
   before_action :load_and_authorize_user, except: %i[index show]
@@ -49,7 +49,7 @@ class UsersController < ApplicationController
     raise Pundit::NotAuthorizedError if params[:user][:organisation_id].present? && !policy(@user).assign_organisations?
 
     updater = UserUpdate.new(@user, user_params, current_user, user_ip_address)
-    if updater.update
+    if updater.call
       redirect_to users_path, notice: "Updated user #{@user.email} successfully"
     else
       render :edit
@@ -80,7 +80,7 @@ class UsersController < ApplicationController
   def cancel_email_change
     @user.unconfirmed_email = nil
     @user.confirmation_token = nil
-    @user.save(validate: false)
+    @user.save!(validate: false)
     redirect_back(fallback_location: root_path)
   end
 
@@ -95,7 +95,7 @@ class UsersController < ApplicationController
     if current_email == new_email.strip
       flash[:alert] = "Nothing to update."
       render :edit_email_or_password, layout: "admin_layout"
-    elsif @user.update_attributes(email: new_email)
+    elsif @user.update(email: new_email)
       EventLog.record_email_change(@user, current_email, new_email)
       UserMailer.email_changed_notification(@user).deliver_later
       redirect_to root_path, notice: "An email has been sent to #{new_email}. Follow the link in the email to update your address."
@@ -133,6 +133,7 @@ private
   def filter_users
     @users = @users.filter_by_name(params[:filter]) if params[:filter].present?
     @users = @users.with_role(params[:role]) if can_filter_role?
+    @users = @users.with_permission(params[:permission]) if params[:permission].present?
     @users = @users.with_organisation(params[:organisation]) if params[:organisation].present?
     @users = @users.with_status(params[:status]) if params[:status].present?
     @users = @users.with_2sv_enabled(params[:two_step_status]) if params[:two_step_status].present?
@@ -166,6 +167,7 @@ private
   def any_filter?
     params[:filter].present? ||
       params[:role].present? ||
+      params[:permission].present? ||
       params[:status].present? ||
       params[:organisation].present? ||
       params[:two_step_status].present?

@@ -1,4 +1,4 @@
-class BatchInvitationUser < ActiveRecord::Base
+class BatchInvitationUser < ApplicationRecord
   belongs_to :batch_invitation
 
   validates :outcome, inclusion: { in: [nil, "success", "failed", "skipped"] }
@@ -10,8 +10,8 @@ class BatchInvitationUser < ActiveRecord::Base
   def invite(inviting_user, supported_permission_ids)
     sanitised_attributes = sanitise_attributes_for_inviting_user_role(
       {
-        name: self.name,
-        email: self.email,
+        name: name,
+        email: email,
         organisation_id: organisation_id,
         supported_permission_ids: supported_permission_ids,
       },
@@ -20,7 +20,7 @@ class BatchInvitationUser < ActiveRecord::Base
 
     invite_user_with_attributes(sanitised_attributes, inviting_user)
   rescue InvalidOrganisationSlug
-    self.update_column(:outcome, "failed")
+    update_column(:outcome, "failed")
   end
 
   def humanized_outcome
@@ -58,18 +58,18 @@ class BatchInvitationUser < ActiveRecord::Base
 private
 
   def invite_user_with_attributes(sanitised_attributes, inviting_user)
-    if User.find_by_email(self.email)
-      self.update_column(:outcome, "skipped")
+    if User.find_by(email: email)
+      update_column(:outcome, "skipped")
     else
       begin
         user = User.invite!(sanitised_attributes.to_h, inviting_user)
         if user.persisted?
-          self.update_column(:outcome, "success")
+          update_column(:outcome, "success")
         else
-          self.update_column(:outcome, "failed")
+          update_column(:outcome, "failed")
         end
-      rescue StandardError => e
-        self.update_column(:outcome, "failed")
+      rescue StandardError
+        update_column(:outcome, "failed")
       end
     end
   end

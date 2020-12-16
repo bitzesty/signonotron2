@@ -12,4 +12,8 @@ en:
       no-instance: "noreply-signon@%{reply_to_domain}"
 
   noisy_batch_invitation_mailer:
-    to: "signon-alerts@%{reply_to_domain}"
+    to: "signon-alerts@digital.cabinet-office.gov.uk"
+
+  support:
+    name: 'GOV.UK Support'
+    url: 'https://www.gov.uk/support/internal'

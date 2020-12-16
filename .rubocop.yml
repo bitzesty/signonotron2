@@ -1,14 +1,8 @@
-Style/CommentedKeyword:
-  Enabled: false
+inherit_gem:
+  rubocop-govuk:
+    - config/default.yml
+    - config/rails.yml
 
-Lint/AmbiguousRegexpLiteral:
-  Enabled: false
-
-Lint/UselessAssignment:
-  Enabled: false
-
-Lint/HandleExceptions:
-  Enabled: false
-
-Lint/AssignmentInCondition:
-  Enabled: false
+inherit_mode:
+  merge:
+    - Exclude

@@ -2,15 +2,16 @@ require "test_helper"
 
 class UserMailerTest < ActionMailer::TestCase
   def assert_body_includes(search_string, email = @email)
-    email.body.parts.each do |part|
-      assert_includes part.body, search_string
-    end
+    assert_includes email.body, search_string
   end
 
   def assert_not_body_includes(search, email = @email)
-    email.body.parts.each do |part|
-      assert_not_includes part.body, search
-    end
+    assert_not_includes email.body, search
+  end
+
+  def assert_support_present_in_text(link_text, email = @email)
+    text_string = link_text + " (https://www.gov.uk/support/internal)"
+    assert_includes email.body, text_string
   end
 
   context "2-step verification set up" do
@@ -39,12 +40,42 @@ class UserMailerTest < ActionMailer::TestCase
       end
 
       should "not include the environment in the subject" do
-        refute_match /^\[/, @email.subject
+        assert_no_match(/^\[/, @email.subject)
       end
 
       should "not include the 'verify for production separately' warning" do
         assert_not_body_includes "separately for your Production"
       end
+    end
+  end
+
+  context "2-step verification changed" do
+    setup do
+      user = stub(name: "Ben", email: "test@example.com")
+      @email = UserMailer.two_step_changed(user)
+    end
+
+    should "include the successful change message" do
+      assert_body_includes "You’ve successfully set up a new phone"
+    end
+
+    should "include correct support links" do
+      assert_support_present_in_text "support ticket"
+    end
+  end
+
+  context "2-step verification reset" do
+    setup do
+      user = stub(name: "Ben", email: "test@example.com")
+      @email = UserMailer.two_step_reset(user)
+    end
+
+    should "include the successful reset message" do
+      assert_body_includes "Your 2-step verification has been reset."
+    end
+
+    should "include correct support links" do
+      assert_support_present_in_text "support ticket"
     end
   end
 
@@ -63,7 +94,7 @@ class UserMailerTest < ActionMailer::TestCase
     end
 
     should "include an instance name in the subject" do
-      assert_match /Your .* Signon development account/, @email.subject
+      assert_match(/Your .* Signon development account/, @email.subject)
     end
 
     should "include an instance name in the body" do
@@ -86,6 +117,26 @@ class UserMailerTest < ActionMailer::TestCase
     end
   end
 
+  context "email a user to notify of suspension" do
+    setup do
+      Rails.application.config.stubs(:instance_name).returns("test")
+      stub_user = stub(name: "User", email: "user@example.com")
+      @email = UserMailer.suspension_notification(stub_user)
+    end
+
+    should "say suspended in the subject" do
+      assert_includes @email.subject, "suspended"
+    end
+
+    should "say 'suspended' in the body" do
+      assert_body_includes "suspended"
+    end
+
+    should "include support links" do
+      assert_support_present_in_text "support form"
+    end
+  end
+
   context "on a named Signon instance" do
     setup do
       Rails.application.config.stubs(:instance_name).returns("test")
@@ -94,7 +145,7 @@ class UserMailerTest < ActionMailer::TestCase
     end
 
     should "include the instance name in the subject" do
-      assert_match /Your .* Signon test account/, @email.subject
+      assert_match(/Your .* Signon test account/, @email.subject)
     end
 
     should "include the instance name in the body" do
@@ -122,14 +173,24 @@ class UserMailerTest < ActionMailer::TestCase
     should "state when the account will be unlocked" do
       assert_body_includes "Your account will be unlocked at #{(@the_time + 1.hour).to_s(:govuk_date)}"
     end
+
+    should "include correct support links" do
+      assert_support_present_in_text "support form"
+    end
   end
 
   context "emailing a user to notify that reset password is dis-allowed" do
-    should "mention that reset is disallowed because their account is suspended" do
+    setup do
       stub_user = stub(name: "User", email: "user@example.com")
-      email = UserMailer.notify_reset_password_disallowed_due_to_suspension(stub_user)
+      @email = UserMailer.notify_reset_password_disallowed_due_to_suspension(stub_user)
+    end
 
-      assert_body_includes "You can't request a password reset on a suspended account.", email
+    should "mention that reset is disallowed because their account is suspended" do
+      assert_body_includes "You can't request a password reset on a suspended account."
+    end
+
+    should "include correct support links" do
+      assert_support_present_in_text "support form"
     end
   end
 end

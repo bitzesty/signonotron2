@@ -84,15 +84,15 @@ class SupportedPermissionsControllerTest < ActionController::TestCase
         delegatable: true,
         default: true,
         created_at: 2.days.ago,
-)
+      )
 
       put :update, params: { doorkeeper_application_id: app.id, id: perm.id, supported_permission: { delegatable: "0", default: "0" } }
 
       assert_redirected_to(controller: "supported_permissions", action: :index)
       assert_equal "Successfully updated permission permission1", flash[:notice]
       perm.reload
-      refute perm.delegatable
-      refute perm.default
+      assert_not perm.delegatable
+      assert_not perm.default
     end
   end
 end

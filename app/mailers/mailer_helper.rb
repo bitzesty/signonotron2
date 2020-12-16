@@ -33,6 +33,6 @@ module MailerHelper
   end
 
   def reply_to_domain
-    ENV.fetch 'EMAIL_REPLY_TO_DOMAIN', 'gov.uk'
+    ENV.fetch 'EMAIL_REPLY_TO_DOMAIN', 'digital.cabinet-office.gov.uk'
   end
 end

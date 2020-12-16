@@ -83,8 +83,8 @@ class AdminUserIndexTest < ActionDispatch::IntegrationTest
       assert page.has_content?("Bert bbbert@example.com")
       assert page.has_content?("Eddie eddie_bb@example.com")
 
-      assert ! page.has_content?("Aardvark aardvark@example.com")
-      assert ! page.has_content?("Ernie ernie@example.com")
+      assert_not page.has_content?("Aardvark aardvark@example.com")
+      assert_not page.has_content?("Ernie ernie@example.com")
 
       click_on "Users"
 
@@ -100,14 +100,35 @@ class AdminUserIndexTest < ActionDispatch::IntegrationTest
       select_role("Normal")
 
       assert_equal User.with_role(:normal).count, page.all("table tbody tr").count
-      assert ! page.has_content?("Admin User admin@example.com")
+      assert_not page.has_content?("Admin User admin@example.com")
       User.with_role(:normal).each do |normal_user|
         assert page.has_content?(normal_user.email)
       end
 
       select_role("All Roles")
 
-      %w(Aardvark Abbot Abbey Admin).each do |user_name|
+      %w[Aardvark Abbot Abbey Admin].each do |user_name|
+        assert page.has_content?(user_name)
+      end
+    end
+
+    should "filter users by permission" do
+      uap = create(:user_application_permission, user: User.find_by(name: "Ernie"))
+      visit "/users"
+
+      select_permission("#{uap.application.name} #{uap.supported_permission.name}")
+
+      assert_equal 1, page.all("table tbody tr").count
+      within ".table" do
+        assert page.has_content?("Ernie")
+        (User.pluck(:name) - %w[Ernie]).each do |name|
+          assert_not page.has_content?(name)
+        end
+      end
+
+      select_permission("All Permissions")
+
+      %w[Aardvark Abbot Abbey Admin].each do |user_name|
         assert page.has_content?(user_name)
       end
     end
@@ -118,12 +139,12 @@ class AdminUserIndexTest < ActionDispatch::IntegrationTest
       select_status("Suspended")
 
       assert_equal 1, page.all("table tbody tr").count
-      assert ! page.has_content?("Aardvark")
+      assert_not page.has_content?("Aardvark")
       assert page.has_content?("Suspended McFee")
 
       select_status("All Statuses")
 
-      %w(Aardvark Abbot Abbey Admin Suspended).each do |user_name|
+      %w[Aardvark Abbot Abbey Admin Suspended].each do |user_name|
         assert page.has_content?(user_name)
       end
     end
@@ -133,12 +154,12 @@ class AdminUserIndexTest < ActionDispatch::IntegrationTest
 
       select_organisation("Org 1")
       assert_equal 1, page.all("table tbody tr").count
-      assert ! page.has_content?("Aardvark")
+      assert_not page.has_content?("Aardvark")
       assert page.has_content?("Ed")
 
       select_organisation("All Organisations")
 
-      %w(Aardvark Abbot Abbey Admin Suspended).each do |user_name|
+      %w[Aardvark Abbot Abbey Admin Suspended].each do |user_name|
         assert page.has_content?(user_name)
       end
     end
@@ -191,6 +212,12 @@ class AdminUserIndexTest < ActionDispatch::IntegrationTest
       within ".dropdown-menu" do
         click_on role_name
       end
+    end
+  end
+
+  def select_permission(permission_name)
+    within ".filter-by-permission-menu" do
+      click_on permission_name
     end
   end
 end

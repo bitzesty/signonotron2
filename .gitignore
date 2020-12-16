@@ -32,3 +32,6 @@ REVISION
 # RVM
 .ruby-gemset
 
+# yarn
+node_modules
+yarn-error.log

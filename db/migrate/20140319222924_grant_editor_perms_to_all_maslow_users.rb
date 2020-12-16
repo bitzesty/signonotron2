@@ -1,8 +1,8 @@
-class GrantEditorPermsToAllMaslowUsers < ActiveRecord::Migration[5.1][5.0]
-  class Permission < ActiveRecord::Base
+class GrantEditorPermsToAllMaslowUsers < ActiveRecord::Migration
+  class Permission < ApplicationRecord
     serialize :permissions, Array
   end
-  class ::Doorkeeper::Application < ActiveRecord::Base; end
+  class ::Doorkeeper::Application < ApplicationRecord; end
 
   def up
     maslow = ::Doorkeeper::Application.where(name: "Maslow").first

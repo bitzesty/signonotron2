@@ -5,11 +5,11 @@ module ApplicationHelper
     recognized = Rails.application.routes.recognize_path(link)
     if recognized[:controller] == params[:controller] &&
         recognized[:action] == params[:action]
-      content_tag(:li, class: "active") do
+      tag.li(class: "active") do
         link_to(text, link)
       end
     else
-      content_tag(:li) do
+      tag.li do
         link_to(text, link)
       end
     end
@@ -24,7 +24,7 @@ module ApplicationHelper
     end
   end
 
-  SENSITIVE_QUERY_PARAMETERS = %w{reset_password_token invitation_token}.freeze
+  SENSITIVE_QUERY_PARAMETERS = %w[reset_password_token invitation_token].freeze
 
   def sensitive_query_parameters?
     (request.query_parameters.keys & SENSITIVE_QUERY_PARAMETERS).any?

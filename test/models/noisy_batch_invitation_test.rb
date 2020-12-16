@@ -12,12 +12,12 @@ class NoisyBatchInvitationTest < ActionMailer::TestCase
     end
 
     should "come from noreply-signon@" do
-      assert_match /".* Signon development" <noreply-signon-development@#{reply_to_domain}>/, @email[:from].to_s
+      assert_match(/".* Signon development" <noreply-signon-development@.*\.gov\.uk>/, @email[:from].to_s)
     end
 
     should "send to noreply-signon@" do
       assert_equal @email.to.count, 1
-      assert_match /signon-alerts@#{reply_to_domain}/, @email.to.first
+      assert_match(/signon-alerts@.*\.gov\.uk/, @email.to.first)
     end
 
     should "have a subject" do
@@ -47,7 +47,7 @@ class NoisyBatchInvitationTest < ActionMailer::TestCase
     end
 
     should "from address should include the instance name" do
-      assert_match /".* Signon Test Fools" <noreply-signon-test-fools@#{reply_to_domain}>/, @email[:from].to_s
+      assert_match(/".* Signon Test Fools" <noreply-signon-test-fools@.*\.gov\.uk>/, @email[:from].to_s)
     end
   end
 
@@ -62,7 +62,7 @@ class NoisyBatchInvitationTest < ActionMailer::TestCase
     end
 
     should "from address should include the instance name" do
-      assert_match /".* Signon" <noreply-signon@#{reply_to_domain}>/, @email[:from].to_s
+      assert_match(/".* Signon" <noreply-signon@.*\.gov\.uk>/, @email[:from].to_s)
     end
   end
 end

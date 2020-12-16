@@ -22,7 +22,7 @@ class SSOPushCredentialTest < ActiveSupport::TestCase
     context "given an already authorised application" do
       setup do
         authorisation = @user.authorisations.create!(application_id: @application.id)
-        authorisation.update_attribute(:token, "foo")
+        authorisation.update!(token: "foo")
       end
 
       should "return the bearer token for an already-authorized application" do
@@ -36,17 +36,17 @@ class SSOPushCredentialTest < ActiveSupport::TestCase
         SSOPushCredential.credentials(@application)
 
         assert_equal 2, @user.application_permissions.count
-        assert_same_elements %w(signin user_update_permission), @user.permissions_for(@application)
+        assert_same_elements %w[signin user_update_permission], @user.permissions_for(@application)
       end
 
       should "not create new application permissions if both already exist" do
-        @user.grant_application_permissions(@application, %w(user_update_permission signin))
+        @user.grant_application_permissions(@application, %w[user_update_permission signin])
 
         assert_equal 2, @user.application_permissions.count
         SSOPushCredential.credentials(@application)
 
         assert_equal 2, @user.application_permissions.count
-        assert_same_elements %w(user_update_permission signin), @user.permissions_for(@application)
+        assert_same_elements %w[user_update_permission signin], @user.permissions_for(@application)
       end
     end
 
@@ -61,10 +61,10 @@ class SSOPushCredentialTest < ActiveSupport::TestCase
     end
 
     should "create an authentication with an expiry of 10 years" do
-      bearer_token = SSOPushCredential.credentials(@application)
+      SSOPushCredential.credentials(@application)
 
       assert @user.authorisations.first.present?
-      assert @user.authorisations.first.expires_in >= 315400000
+      assert @user.authorisations.first.expires_in >= 315_400_000
     end
   end
 

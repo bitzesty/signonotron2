@@ -8,12 +8,12 @@ class ::Doorkeeper::ApplicationTest < ActiveSupport::TestCase
   context "user_update_permission" do
     should "not be grantable from ui" do
       user_update_permission = create(:application, supports_push_updates: true).supported_permissions.detect { |perm| perm.name == "user_update_permission" }
-      refute user_update_permission.grantable_from_ui?
+      assert_not user_update_permission.grantable_from_ui?
     end
 
     should "be created after save if application supports push updates" do
       application = create(:application, supports_push_updates: false)
-      application.update_attributes(supports_push_updates: true)
+      application.update!(supports_push_updates: true)
 
       application.reload
       assert_includes application.supported_permission_strings, "user_update_permission"
@@ -29,11 +29,11 @@ class ::Doorkeeper::ApplicationTest < ActiveSupport::TestCase
       user = create(:user)
       app = create(:application, with_supported_permissions: %w[write])
 
-      assert_equal %w(signin write), app.supported_permission_strings(user)
+      assert_equal %w[signin write], app.supported_permission_strings(user)
     end
 
     should "only show permissions that super organisation admins themselves have" do
-      app = create(:application, with_delegatable_supported_permissions: %w(write approve))
+      app = create(:application, with_delegatable_supported_permissions: %w[write approve])
       super_org_admin = create(:super_org_admin, with_permissions: { app => %w[write] })
 
       assert_equal %w[write], app.supported_permission_strings(super_org_admin)
@@ -42,13 +42,13 @@ class ::Doorkeeper::ApplicationTest < ActiveSupport::TestCase
     should "only show delegatable permissions to super organisation admins" do
       super_org_admin = create(:super_org_admin)
       app = create(:application, with_delegatable_supported_permissions: %w[write], with_supported_permissions: %w[approve])
-      super_org_admin.grant_application_permissions(app, %w(write approve))
+      super_org_admin.grant_application_permissions(app, %w[write approve])
 
       assert_equal %w[write], app.supported_permission_strings(super_org_admin)
     end
 
     should "only show permissions that organisation admins themselves have" do
-      app = create(:application, with_delegatable_supported_permissions: %w(write approve))
+      app = create(:application, with_delegatable_supported_permissions: %w[write approve])
       organisation_admin = create(:organisation_admin, with_permissions: { app => %w[write] })
 
       assert_equal %w[write], app.supported_permission_strings(organisation_admin)
@@ -57,7 +57,7 @@ class ::Doorkeeper::ApplicationTest < ActiveSupport::TestCase
     should "only show delegatable permissions to organisation admins" do
       user = create(:organisation_admin)
       app = create(:application, with_delegatable_supported_permissions: %w[write], with_supported_permissions: %w[approve])
-      user.grant_application_permissions(app, %w(write approve))
+      user.grant_application_permissions(app, %w[write approve])
 
       assert_equal %w[write], app.supported_permission_strings(user)
     end
@@ -82,7 +82,7 @@ class ::Doorkeeper::ApplicationTest < ActiveSupport::TestCase
 
     should "not return applications that the user can't signin into" do
       user = create(:user)
-      application = create(:application)
+      create(:application)
 
       assert_empty Doorkeeper::Application.can_signin(user)
     end

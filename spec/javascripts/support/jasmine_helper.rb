@@ -1,4 +1,7 @@
-# Prevent PhantomJS auto install, uses PhantomJS already on your path.
-Jasmine.configure do |config|
-  config.prevent_phantom_js_auto_install = true
+require "jasmine_selenium_runner/configure_jasmine"
+
+class HeadlessChromeJasmineConfigurer < JasmineSeleniumRunner::ConfigureJasmine
+  def selenium_options
+    { options: GovukTest.headless_chrome_selenium_options }
+  end
 end
