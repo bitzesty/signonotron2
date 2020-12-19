@@ -33,11 +33,11 @@ module DataHygiene
 
       if user.nil?
         if User.exists?(email: row.fetch("New email"))
-          puts "warning: #{row.fetch('Old email')} looks to have already been updated"
+          # puts "warning: #{row.fetch('Old email')} looks to have already been updated"
 
           return true
         else
-          puts "error: couldn't find user #{row.fetch('Old email')}"
+          # puts "error: couldn't find user #{row.fetch('Old email')}"
 
           return false
         end
@@ -64,7 +64,7 @@ module DataHygiene
     end
 
     def update_user(user, new_email_address, new_organisation)
-      puts "#{user.email}: #{new_email_address} #{new_organisation.slug}"
+      # puts "#{user.email}: #{new_email_address} #{new_organisation.slug}"
 
       current_email_address = user.email
 
