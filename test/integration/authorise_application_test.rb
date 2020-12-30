@@ -8,7 +8,7 @@ class AuthoriseApplicationTest < ActionDispatch::IntegrationTest
 
   context "when the user is flagged for 2SV" do
     setup do
-      @user.update_attribute(:require_2sv, true)
+      @user.update!(require_2sv: true)
       ignoring_spurious_error do
         visit "/oauth/authorize?response_type=code&client_id=#{@app.uid}&redirect_uri=#{@app.redirect_uri}"
       end
@@ -22,7 +22,7 @@ class AuthoriseApplicationTest < ActionDispatch::IntegrationTest
 
   should "not confirm the authorisation until the user signs in" do
     visit "/oauth/authorize?response_type=code&client_id=#{@app.uid}&redirect_uri=#{@app.redirect_uri}"
-    refute Doorkeeper::AccessGrant.find_by(resource_owner_id: @user.id)
+    assert_not Doorkeeper::AccessGrant.find_by(resource_owner_id: @user.id)
 
     ignoring_spurious_error do
       signin_with(@user)
@@ -34,7 +34,7 @@ class AuthoriseApplicationTest < ActionDispatch::IntegrationTest
   end
 
   should "not confirm the authorisation if the user has not passed 2-step verification" do
-    @user.update_attribute(:otp_secret_key, ROTP::Base32.random_base32)
+    @user.update!(otp_secret_key: ROTP::Base32.random_base32)
 
     visit "/"
     signin_with(@user, second_step: false)
@@ -42,7 +42,7 @@ class AuthoriseApplicationTest < ActionDispatch::IntegrationTest
       visit "/oauth/authorize?response_type=code&client_id=#{@app.uid}&redirect_uri=#{@app.redirect_uri}"
     end
     assert_response_contains("get your code")
-    refute Doorkeeper::AccessGrant.find_by(resource_owner_id: @user.id)
+    assert_not Doorkeeper::AccessGrant.find_by(resource_owner_id: @user.id)
   end
 
   should "not confirm the authorisation if the user does not have 'signin' permission for the application" do
@@ -54,7 +54,7 @@ class AuthoriseApplicationTest < ActionDispatch::IntegrationTest
       visit "/oauth/authorize?response_type=code&client_id=#{@app.uid}&redirect_uri=#{@app.redirect_uri}"
     end
     assert_response_contains("You don’t have permission to sign in to #{@app.name}.")
-    refute Doorkeeper::AccessGrant.find_by(resource_owner_id: @user.id)
+    assert_not Doorkeeper::AccessGrant.find_by(resource_owner_id: @user.id)
   end
 
   should "confirm the authorisation for a signed-in user with 'signin' permission to the app" do
@@ -69,7 +69,7 @@ class AuthoriseApplicationTest < ActionDispatch::IntegrationTest
   end
 
   should "confirm the authorisation for a fully authenticated 2SV user" do
-    @user.update_attribute(:otp_secret_key, ROTP::Base32.random_base32)
+    @user.update!(otp_secret_key: ROTP::Base32.random_base32)
 
     visit "/"
     signin_with(@user)
@@ -82,8 +82,8 @@ class AuthoriseApplicationTest < ActionDispatch::IntegrationTest
   end
 
   def assert_redirected_to_application(app)
-    assert_match /^#{app.redirect_uri}/, current_url
-    assert_match /\?code=/, current_url
+    assert_match(/^#{app.redirect_uri}/, current_url)
+    assert_match(/\?code=/, current_url)
   end
 
   def ignoring_spurious_error
@@ -92,9 +92,8 @@ class AuthoriseApplicationTest < ActionDispatch::IntegrationTest
     # The browser gets a redirect to url of the destination app.
     # This then gets routed to Signon but Signon doesn't know how to handle the route.
     # And so it raises the RoutingError
-    begin
-      yield
-    rescue ActionController::RoutingError
-    end
+
+    yield
+  rescue ActionController::RoutingError # rubocop:disable Lint/SuppressedException
   end
 end

@@ -1,8 +1,8 @@
-class User < ActiveRecord::Base
+class User < ApplicationRecord
   has_many :permissions
 end
 
-class Permission < ActiveRecord::Base
+class Permission < ApplicationRecord
   belongs_to :user
   belongs_to :application, class_name: "Doorkeeper::Application"
   serialize :permissions, Array
@@ -11,13 +11,13 @@ class Permission < ActiveRecord::Base
   validates_presence_of :user_id
 end
 
-class SwapMagicEverythingPermissionsForRealOnes < ActiveRecord::Migration
+class SwapMagicEverythingPermissionsForRealOnes < ActiveRecord::Migration[5.1][5.0]
   class ::Doorkeeper::Application
     has_many :permissions, dependent: :destroy
   end
 
   def up
-    everything_app = ::Doorkeeper::Application.find_by_name("Everything")
+    everything_app = ::Doorkeeper::Application.find_by(name: "Everything")
     everything_app && everything_app.destroy
 
     User.all.each do |user|

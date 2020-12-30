@@ -9,11 +9,13 @@ class UsersControllerTest < ActionController::TestCase
     original_password_hash = user.encrypted_password
     sign_in user
 
-    post :update_password, params: { id: user.id, user: {
-      current_password: original_password,
-      password: new_password,
-      password_confirmation: new_password,
-    } }
+    post :update_password,
+         params: { id: user.id,
+                   user: {
+                     current_password: original_password,
+                     password: new_password,
+                     password_confirmation: new_password,
+                   } }
 
     [user, original_password_hash]
   end
@@ -71,7 +73,7 @@ class UsersControllerTest < ActionController::TestCase
           assert_equal "new@email.com", confirmation_email.to.first
 
           email_changed_notification = ActionMailer::Base.deliveries.last
-          assert_match /Your .* Signon development email address is being changed/, email_changed_notification.subject
+          assert_match(/Your .* Signon development email address is being changed/, email_changed_notification.subject)
           assert_equal "old@email.com", email_changed_notification.to.first
         end
       end
@@ -97,9 +99,11 @@ class UsersControllerTest < ActionController::TestCase
 
     should "use a new token if it's expired" do
       perform_enqueued_jobs do
-        @user = create(:user_with_pending_email_change,
-                       confirmation_token: "old token",
-                       confirmation_sent_at: 15.days.ago)
+        @user = create(
+          :user_with_pending_email_change,
+          confirmation_token: "old token",
+          confirmation_sent_at: 15.days.ago,
+        )
         sign_in @user
 
         put :resend_email_change, params: { id: @user.id }
@@ -287,11 +291,11 @@ class UsersControllerTest < ActionController::TestCase
         should "respond to CSV format" do
           get :index, params: { format: :csv }
           assert_response :success
-          assert_equal @response.content_type, "text/csv"
+          assert_equal "text/csv", @response.media_type
         end
 
         should "export filtered users by role" do
-          user = create(:user)
+          create(:user)
           get :index, params: { role: "normal", format: :csv }
           lines = @response.body.lines
           assert_equal(2, lines.length)
@@ -312,7 +316,7 @@ class UsersControllerTest < ActionController::TestCase
         end
 
         should "export all users when no filter selected" do
-          user = create(:user)
+          create(:user)
           get :index, params: { format: :csv }
           lines = @response.body.lines
           assert_equal(3, lines.length)
@@ -359,6 +363,17 @@ class UsersControllerTest < ActionController::TestCase
 
           assert_select "tbody tr", count: 1
           assert_select "td.email", /admin@gov.uk/
+        end
+
+        should "scope list of users by permission" do
+          user_application_permissions = create_list(:user_application_permission, 2)
+
+          user_application_permissions.each do |uap|
+            get :index, params: { permission: uap.supported_permission_id }
+
+            assert_select "tbody tr", count: 1
+            assert_select "td.email", /#{uap.user.email}/
+          end
         end
       end
 
@@ -425,8 +440,8 @@ class UsersControllerTest < ActionController::TestCase
         assert_select "select[name='user[organisation_id]']" do
           assert_select "option", count: 3
           assert_select "option[selected=selected]", count: 1
-          assert_select %{option[value="#{org_with_user.id}"][selected=selected]}, text: org_with_user.name_with_abbreviation
-          assert_select %{option[value="#{other_organisation.id}"]}, text: other_organisation.name_with_abbreviation
+          assert_select %(option[value="#{org_with_user.id}"][selected=selected]), text: org_with_user.name_with_abbreviation
+          assert_select %(option[value="#{other_organisation.id}"]), text: other_organisation.name_with_abbreviation
         end
       end
 
@@ -464,11 +479,10 @@ class UsersControllerTest < ActionController::TestCase
         end
       end
 
-
       context "organisation admin" do
         should "not be able to assign organisations" do
           organisation_admin = create(:organisation_admin)
-          outside_organisation = create(:organisation)
+          create(:organisation)
           sign_in organisation_admin
 
           user = create(:user_in_organisation, organisation: organisation_admin.organisation)
@@ -505,7 +519,7 @@ class UsersControllerTest < ActionController::TestCase
         end
 
         should "be able to see all permissions to applications for a user" do
-          delegatable_app = create(:application, with_delegatable_supported_permissions: %w(signin Editor))
+          delegatable_app = create(:application, with_delegatable_supported_permissions: %w[signin Editor])
           non_delegatable_app = create(:application, with_supported_permissions: ["signin", "GDS Admin"])
           delegatable_no_access_to_app = create(:application, with_delegatable_supported_permissions: ["signin", "GDS Editor"])
           non_delegatable_no_access_to_app = create(:application, with_supported_permissions: ["signin", "Import CSVs"])
@@ -514,11 +528,14 @@ class UsersControllerTest < ActionController::TestCase
 
           sign_in organisation_admin
 
-          user = create(:user_in_organisation, organisation: organisation_admin.organisation,
-                        with_permissions: { delegatable_app => %w[Editor],
-                                            non_delegatable_app => ["signin", "GDS Admin"],
-                                            delegatable_no_access_to_app => ["signin", "GDS Editor"],
-                                            non_delegatable_no_access_to_app => ["signin", "Import CSVs"] })
+          user = create(
+            :user_in_organisation,
+            organisation: organisation_admin.organisation,
+            with_permissions: { delegatable_app => %w[Editor],
+                                non_delegatable_app => ["signin", "GDS Admin"],
+                                delegatable_no_access_to_app => ["signin", "GDS Editor"],
+                                non_delegatable_no_access_to_app => ["signin", "Import CSVs"] },
+          )
 
           get :edit, params: { id: user.id }
 
@@ -585,7 +602,7 @@ class UsersControllerTest < ActionController::TestCase
         end
 
         should "be able to see all permissions to applications for a user" do
-          delegatable_app = create(:application, with_delegatable_supported_permissions: %w(signin Editor))
+          delegatable_app = create(:application, with_delegatable_supported_permissions: %w[signin Editor])
           non_delegatable_app = create(:application, with_supported_permissions: ["signin", "GDS Admin"])
           delegatable_no_access_to_app = create(:application, with_delegatable_supported_permissions: ["signin", "GDS Editor"])
           non_delegatable_no_access_to_app = create(:application, with_supported_permissions: ["signin", "Import CSVs"])
@@ -594,11 +611,14 @@ class UsersControllerTest < ActionController::TestCase
 
           sign_in super_org_admin
 
-          user = create(:user_in_organisation, organisation: super_org_admin.organisation,
-                        with_permissions: { delegatable_app => %w[Editor],
-                                            non_delegatable_app => ["signin", "GDS Admin"],
-                                            delegatable_no_access_to_app => ["signin", "GDS Editor"],
-                                            non_delegatable_no_access_to_app => ["signin", "Import CSVs"] })
+          user = create(
+            :user_in_organisation,
+            organisation: super_org_admin.organisation,
+            with_permissions: { delegatable_app => %w[Editor],
+                                non_delegatable_app => ["signin", "GDS Admin"],
+                                delegatable_no_access_to_app => ["signin", "GDS Editor"],
+                                non_delegatable_no_access_to_app => ["signin", "Import CSVs"] },
+          )
 
           get :edit, params: { id: user.id }
 
@@ -626,7 +646,7 @@ class UsersControllerTest < ActionController::TestCase
 
       context "superadmin" do
         should "not be able to see all permissions to applications for a user" do
-          delegatable_app = create(:application, with_delegatable_supported_permissions: %w(signin Editor))
+          delegatable_app = create(:application, with_delegatable_supported_permissions: %w[signin Editor])
           non_delegatable_app = create(:application, with_supported_permissions: ["signin", "GDS Admin"])
           delegatable_no_access_to_app = create(:application, with_delegatable_supported_permissions: ["signin", "GDS Editor"])
           non_delegatable_no_access_to_app = create(:application, with_supported_permissions: ["signin", "Import CSVs"])
@@ -635,11 +655,14 @@ class UsersControllerTest < ActionController::TestCase
 
           sign_in superadmin
 
-          user = create(:user_in_organisation, organisation: superadmin.organisation,
-                        with_permissions: { delegatable_app => %w[Editor],
-                                            non_delegatable_app => ["signin", "GDS Admin"],
-                                            delegatable_no_access_to_app => ["signin", "GDS Editor"],
-                                            non_delegatable_no_access_to_app => ["signin", "Import CSVs"] })
+          user = create(
+            :user_in_organisation,
+            organisation: superadmin.organisation,
+            with_permissions: { delegatable_app => %w[Editor],
+                                non_delegatable_app => ["signin", "GDS Admin"],
+                                delegatable_no_access_to_app => ["signin", "GDS Editor"],
+                                non_delegatable_no_access_to_app => ["signin", "Import CSVs"] },
+          )
 
           get :edit, params: { id: user.id }
 
@@ -739,8 +762,8 @@ class UsersControllerTest < ActionController::TestCase
 
             email_change_notifications = ActionMailer::Base.deliveries[-2..-1]
             assert_equal email_change_notifications.map(&:subject).uniq.count, 1
-            assert_match /Your .* Signon development email address has been updated/, email_change_notifications.map(&:subject).first
-            assert_equal(%w(old@email.com new@email.com), email_change_notifications.map { |mail| mail.to.first })
+            assert_match(/Your .* Signon development email address has been updated/, email_change_notifications.map(&:subject).first)
+            assert_equal(%w[old@email.com new@email.com], email_change_notifications.map { |mail| mail.to.first })
           end
         end
 
@@ -821,9 +844,11 @@ class UsersControllerTest < ActionController::TestCase
       end
 
       should "use a new token if it's expired" do
-        another_user = create(:user_with_pending_email_change,
-                              confirmation_token: "old token",
-                              confirmation_sent_at: 15.days.ago)
+        another_user = create(
+          :user_with_pending_email_change,
+          confirmation_token: "old token",
+          confirmation_sent_at: 15.days.ago,
+        )
         put :resend_email_change, params: { id: another_user.id }
 
         assert_not_equal "old token", another_user.reload.confirmation_token

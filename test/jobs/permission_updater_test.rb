@@ -45,7 +45,11 @@ class PermissionUpdaterTest < ActiveSupport::TestCase
       should "not record the last_synced_at timestamp on the permissions" do
         stub_request(:put, users_url(@application)).to_timeout
 
-        PermissionUpdater.new.perform(@user.uid, @application.id) rescue SSOPushError
+        begin
+          PermissionUpdater.new.perform(@user.uid, @application.id)
+        rescue StandardError
+          SSOPushError
+        end
 
         assert_nil @signin_permission.reload.last_synced_at
         assert_nil @other_permission.reload.last_synced_at
@@ -66,8 +70,8 @@ class PermissionUpdaterTest < ActiveSupport::TestCase
       end
 
       should "not raise if the user has no permissions for the application" do
-        @signin_permission.destroy
-        @other_permission.destroy
+        @signin_permission.destroy!
+        @other_permission.destroy!
 
         expected_body = UserOAuthPresenter.new(@user, @application).as_hash.to_json
         http_request = stub_request(:put, users_url(@application)).with(body: expected_body)

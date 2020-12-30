@@ -1,5 +1,3 @@
-# coding: utf-8
-
 require "test_helper"
 require "bcrypt"
 
@@ -14,7 +12,7 @@ class UserTest < ActiveSupport::TestCase
 
   context "#require_2sv" do
     should "default to false for normal users" do
-      refute create(:user).require_2sv?
+      assert_not create(:user).require_2sv?
     end
 
     should "default to true for admins and superadmins in production" do
@@ -25,51 +23,51 @@ class UserTest < ActiveSupport::TestCase
     should "default to false for admins and superadmins in non-production" do
       Rails.application.config.stubs(instance_name: "foobar")
 
-      refute create(:admin_user).require_2sv?
-      refute create(:superadmin_user).require_2sv?
+      assert_not create(:admin_user).require_2sv?
+      assert_not create(:superadmin_user).require_2sv?
     end
 
     should "default to true when a user is promoted to admin" do
       user = create(:user)
-      user.update_attribute(:role, "admin")
+      user.update!(role: "admin")
       assert user.require_2sv?
     end
 
     should "default to true when a user is promoted to superadmin" do
       user = create(:user)
-      user.update_attribute(:role, "superadmin")
+      user.update!(role: "superadmin")
       assert user.require_2sv?
     end
 
     should "default to true when an admin is promoted to superadmin" do
       user = create(:admin_user)
-      user.update_attribute(:role, "superadmin")
+      user.update!(role: "superadmin")
       assert user.require_2sv?
     end
 
     should "remain true when an admin is demoted" do
       user = create(:admin_user)
-      user.update_attribute(:role, "normal")
+      user.update!(role: "normal")
       assert user.require_2sv?
     end
 
     should "not change if other changes are made to an admin" do
       user = create(:admin_user)
-      user.update_attribute(:require_2sv, false)
-      user.update_attribute(:name, "Foo Bar")
-      refute user.require_2sv?
+      user.update!(require_2sv: false)
+      user.update!(name: "Foo Bar")
+      assert_not user.require_2sv?
     end
   end
 
   context "#send_two_step_flag_notification?" do
     context "when not flagged" do
       should "return false" do
-        refute @user.send_two_step_flag_notification?
+        assert_not @user.send_two_step_flag_notification?
       end
 
       context "when flagging" do
         should "maintain after persisting" do
-          @user.update_attribute(:require_2sv, true)
+          @user.update!(require_2sv: true)
 
           assert @user.send_two_step_flag_notification?
         end
@@ -77,7 +75,7 @@ class UserTest < ActiveSupport::TestCase
 
       context "when promoting a user" do
         should "be true" do
-          @user.update_attribute(:role, "admin")
+          @user.update!(role: "admin")
 
           assert @user.send_two_step_flag_notification?
         end
@@ -88,7 +86,7 @@ class UserTest < ActiveSupport::TestCase
       should "return false" do
         @user.toggle(:require_2sv)
 
-        refute @user.reload.send_two_step_flag_notification?
+        assert_not @user.reload.send_two_step_flag_notification?
       end
     end
   end
@@ -103,23 +101,24 @@ class UserTest < ActiveSupport::TestCase
     should "persist the required attributes" do
       @two_step_user.reload
 
-      refute @two_step_user.has_2sv?
+      assert_not @two_step_user.has_2sv?
       assert @two_step_user.prompt_for_2sv?
     end
 
     should "record the event" do
-      assert_equal 1, EventLog.where(
-        event_id: EventLog::TWO_STEP_RESET.id,
-        uid: @two_step_user.uid,
-        initiator: @super_admin,
-      ).count
+      assert_equal 1,
+                   EventLog.where(
+                     event_id: EventLog::TWO_STEP_RESET.id,
+                     uid: @two_step_user.uid,
+                     initiator: @super_admin,
+                   ).count
     end
   end
 
   context "#prompt_for_2sv?" do
     context "when the user has already enrolled" do
       should "always be false" do
-        refute build(:two_step_flagged_user, otp_secret_key: "welp").prompt_for_2sv?
+        assert_not build(:two_step_flagged_user, otp_secret_key: "welp").prompt_for_2sv?
       end
     end
   end
@@ -141,28 +140,28 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "fetches web users who signed_in X days ago" do
-    signed_in_8_days_ago = create(:user, current_sign_in_at: 8.days.ago)
+    create(:user, current_sign_in_at: 8.days.ago)
     signed_in_2_days_ago = create(:user, current_sign_in_at: 2.days.ago)
-    api_user = create(:api_user, current_sign_in_at: 2.days.ago)
+    create(:api_user, current_sign_in_at: 2.days.ago)
 
     assert_equal [signed_in_2_days_ago], User.last_signed_in_on(2.days.ago)
   end
 
   test "fetches web users who signed_in before X days ago" do
-    signed_in_6_days_ago = create(:user, current_sign_in_at: 6.days.ago)
+    create(:user, current_sign_in_at: 6.days.ago)
     signed_in_7_days_ago = create(:user, current_sign_in_at: 7.days.ago)
     signed_in_8_days_ago = create(:user, current_sign_in_at: 8.days.ago)
-    api_user = create(:api_user, current_sign_in_at: 8.days.ago)
+    create(:api_user, current_sign_in_at: 8.days.ago)
 
-    assert_equal [signed_in_7_days_ago, signed_in_8_days_ago], User.last_signed_in_before(6.days.ago)
+    assert_equal [signed_in_7_days_ago, signed_in_8_days_ago].sort, User.last_signed_in_before(6.days.ago).sort
   end
 
   test "fetches web users who signed_in after X days ago" do
     signed_in_0_days_ago = create(:user, current_sign_in_at: 0.days.ago)
     signed_in_1_day_ago  = create(:user, current_sign_in_at: 1.day.ago)
-    signed_in_2_days_ago = create(:user, current_sign_in_at: 2.days.ago)
+    create(:user, current_sign_in_at: 2.days.ago)
 
-    assert_equal [signed_in_0_days_ago, signed_in_1_day_ago], User.last_signed_in_after(1.day.ago)
+    assert_equal [signed_in_0_days_ago, signed_in_1_day_ago].sort, User.last_signed_in_after(1.day.ago).sort
   end
 
   context ".with_role" do
@@ -177,6 +176,22 @@ class UserTest < ActiveSupport::TestCase
 
     should "not return users with a role other than the specified role" do
       assert_not_includes User.with_role(:admin), @normal
+    end
+  end
+
+  context ".with_permission" do
+    should "only return users with the specified permission" do
+      joe = create(:user)
+      amy = create(:user)
+      app = create(:application, with_supported_permissions: %w[manage])
+      signin_perm = app.signin_permission # created in a callback in the Application model
+      manage_perm = app.supported_permissions.find_by(name: "manage")
+      create(:user_application_permission, user: joe, application: app, supported_permission: signin_perm)
+      create(:user_application_permission, user: amy, application: app, supported_permission: signin_perm)
+      create(:user_application_permission, user: amy, application: app, supported_permission: manage_perm)
+
+      assert_equal User.with_permission(signin_perm.id), [joe, amy]
+      assert_equal User.with_permission(manage_perm.id), [amy]
     end
   end
 
@@ -217,7 +232,7 @@ class UserTest < ActiveSupport::TestCase
     should "require an email" do
       user = build(:user, email: nil)
 
-      refute user.valid?
+      assert_not user.valid?
       assert_equal ["can't be blank"], user.errors[:email]
     end
 
@@ -244,7 +259,7 @@ class UserTest < ActiveSupport::TestCase
       ].each do |email|
         user.email = email
 
-        refute user.valid?, "Expected user to be invalid with email: '#{email}'"
+        assert_not user.valid?, "Expected user to be invalid with email: '#{email}'"
         assert_equal ["is invalid"], user.errors[:email]
       end
     end
@@ -259,7 +274,7 @@ class UserTest < ActiveSupport::TestCase
     should "emails can't contain non-ASCII characters" do
       user = build(:user, email: "mariõs.castle@wii.com") # unicode tilde character
 
-      refute user.valid?
+      assert_not user.valid?
       assert_equal ["can't contain non-ASCII characters"], user.errors[:email]
     end
   end
@@ -268,7 +283,7 @@ class UserTest < ActiveSupport::TestCase
 
   test "it requires a password to be at least 10 characters long" do
     u = build(:user, password: "dNG.c0w5!")
-    refute u.valid?
+    assert_not u.valid?
     assert_not_empty u.errors[:password]
   end
 
@@ -284,7 +299,7 @@ class UserTest < ActiveSupport::TestCase
     assert u.valid?
 
     u = build(:user, email: "sherlock.holmes@bakerstreet.com", password: "sherlock holmes baker street")
-    refute u.valid?
+    assert_not u.valid?
     assert_not_empty u.errors[:password]
   end
 
@@ -295,27 +310,27 @@ class UserTest < ActiveSupport::TestCase
     u.suspend "suspended for shenanigans"
     u.unsuspend
 
-    refute u.valid_password?(original_password)
+    assert_not u.valid_password?(original_password)
   end
 
   test "it requires a reason for suspension to suspend a user" do
     u = create(:user)
     u.suspended_at = 1.minute.ago
-    refute u.valid?
+    assert_not u.valid?
     assert_not_empty u.errors[:reason_for_suspension]
   end
 
   test "organisation admin must belong to an organisation" do
     user = build(:user, role: "organisation_admin", organisation_id: nil)
 
-    refute user.valid?
+    assert_not user.valid?
     assert_equal "can't be 'None' for Organisation Admin", user.errors[:organisation_id].first
   end
 
   test "super organisation admin must belong to an organisation" do
     user = build(:user, role: "super_organisation_admin", organisation_id: nil)
 
-    refute user.valid?
+    assert_not user.valid?
     assert_equal "can't be 'None' for Super Organisation Admin", user.errors[:organisation_id].first
   end
 
@@ -327,7 +342,7 @@ class UserTest < ActiveSupport::TestCase
     u.update_column :encrypted_password, old_encrypted_password
     u.reload
 
-    refute u.valid_password?("something else")
+    assert_not u.valid_password?("something else")
     u.reload
 
     assert_equal old_encrypted_password, u.encrypted_password, "Changed password"
@@ -360,11 +375,11 @@ class UserTest < ActiveSupport::TestCase
     user.grant_application_permission(app, "signin")
     user.grant_application_permission(app, "edit")
 
-    assert_user_has_permissions %w(edit signin), app, user
+    assert_user_has_permissions %w[edit signin], app, user
   end
 
   test "inviting a user sets confirmed_at" do
-    if user = User.find_by_email("j@1.com")
+    if (user = User.find_by(email: "j@1.com"))
       user.delete
     end
     user = User.invite!(name: "John Smith", email: "j@1.com")
@@ -377,7 +392,7 @@ class UserTest < ActiveSupport::TestCase
     user = User.invite!(name: nil, email: "j@1.com")
 
     assert_not_empty user.errors
-    refute user.persisted?
+    assert_not user.persisted?
   end
 
   test "doesn't allow previously used password" do
@@ -390,7 +405,7 @@ class UserTest < ActiveSupport::TestCase
     @user.password = password
     @user.password_confirmation = password
 
-    refute @user.valid?
+    assert_not @user.valid?
   end
 
   test "doesn't allow user to change to same password" do
@@ -400,7 +415,7 @@ class UserTest < ActiveSupport::TestCase
 
     @user.password = password
     @user.password_confirmation = password
-    refute @user.valid?
+    assert_not @user.valid?
   end
 
   context "User status" do
@@ -488,7 +503,7 @@ class UserTest < ActiveSupport::TestCase
       @app = create(:application)
 
       # authenticate access
-      ::Doorkeeper::AccessToken.create(resource_owner_id: @user.id, application_id: @app.id, token: "1234")
+      ::Doorkeeper::AccessToken.create!(resource_owner_id: @user.id, application_id: @app.id, token: "1234")
     end
 
     should "include applications the user is authorised for" do

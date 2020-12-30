@@ -1,14 +1,16 @@
 class UserPolicy < BasePolicy
   def index?
-    %w(superadmin admin super_organisation_admin organisation_admin).include? current_user.role
+    %w[superadmin admin super_organisation_admin organisation_admin].include? current_user.role
   end
 
-  def new? # invitations#new
-    %w(superadmin admin).include? current_user.role
+  # invitations#new
+  def new?
+    %w[superadmin admin].include? current_user.role
   end
   alias_method :assign_organisations?, :new?
 
-  def create? # invitations#create
+  # invitations#create
+  def create?
     current_user.superadmin? || (current_user.admin? && !record.superadmin?)
   end
 

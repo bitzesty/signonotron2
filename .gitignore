@@ -23,3 +23,15 @@
 # Simplecov
 coverage/*
 test/reports/*
+
+.idea*
+REVISION
+*_manifest.yml
+*_manifest*.yml
+
+# RVM
+.ruby-gemset
+
+# yarn
+node_modules
+yarn-error.log

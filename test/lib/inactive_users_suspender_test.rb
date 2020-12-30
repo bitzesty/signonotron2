@@ -24,7 +24,7 @@ class InactiveUsersSuspenderTest < ActiveSupport::TestCase
 
     InactiveUsersSuspender.new.suspend
 
-    refute active_user.reload.suspended?
+    assert_not active_user.reload.suspended?
   end
 
   test "doesn't suspend users who have logged-in since suspension threshold days ago" do
@@ -32,11 +32,11 @@ class InactiveUsersSuspenderTest < ActiveSupport::TestCase
 
     InactiveUsersSuspender.new.suspend
 
-    refute active_user.reload.suspended?
+    assert_not active_user.reload.suspended?
   end
 
   test "doesn't suspend users who have recently been unsuspended" do
-    admin = create(:admin_user)
+    create(:admin_user)
     unsuspended_user = create(:suspended_user, current_sign_in_at: 46.days.ago)
     Timecop.travel(2.days.ago) do
       unsuspended_user.unsuspend
@@ -44,7 +44,7 @@ class InactiveUsersSuspenderTest < ActiveSupport::TestCase
 
     InactiveUsersSuspender.new.suspend
 
-    refute unsuspended_user.reload.suspended?
+    assert_not unsuspended_user.reload.suspended?
   end
 
   test "doesn't modify users who are suspended" do
@@ -63,11 +63,11 @@ class InactiveUsersSuspenderTest < ActiveSupport::TestCase
 
   test "records auto-suspension in event log" do
     users = create_list(:user, 2, current_sign_in_at: 46.days.ago)
-    users.each { |user|
+    users.each do |user|
       EventLog.expects(:record_event)
         .with(responds_with(:email, user.email), EventLog::ACCOUNT_AUTOSUSPENDED)
         .once
-    }
+    end
 
     InactiveUsersSuspender.new.suspend
   end
@@ -77,11 +77,11 @@ class InactiveUsersSuspenderTest < ActiveSupport::TestCase
 
     mailer = mock
     mailer.expects(:deliver_now).returns(true).twice
-    users.each { |user|
+    users.each do |user|
       UserMailer.expects(:suspension_notification)
         .with(responds_with(:email, user.email))
         .returns(mailer).once
-    }
+    end
 
     InactiveUsersSuspender.new.suspend
   end

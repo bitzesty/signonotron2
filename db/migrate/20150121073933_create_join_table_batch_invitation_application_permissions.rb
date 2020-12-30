@@ -1,4 +1,4 @@
-class CreateJoinTableBatchInvitationApplicationPermissions < ActiveRecord::Migration
+class CreateJoinTableBatchInvitationApplicationPermissions < ActiveRecord::Migration[5.1][5.0]
   def change
     create_table :batch_invitation_application_permissions do |t|
       t.integer :batch_invitation_id, null: false
@@ -7,7 +7,7 @@ class CreateJoinTableBatchInvitationApplicationPermissions < ActiveRecord::Migra
     end
 
     add_index :batch_invitation_application_permissions, %i[batch_invitation_id supported_permission_id],
-                unique: true,
-                name: "index_batch_invite_app_perms_on_batch_invite_and_supported_perm"
+              unique: true,
+              name: "index_batch_invite_app_perms_on_batch_invite_and_supported_perm"
   end
 end

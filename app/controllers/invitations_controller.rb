@@ -12,10 +12,18 @@ class InvitationsController < Devise::InvitationsController
     super
   end
 
+  def edit
+    super
+  end
+
+  def update
+    super
+  end
+
   def create
     # Prevent an error when devise_invitable invites/updates an existing user,
     # and accepts_nested_attributes_for tries to create duplicate permissions.
-    if self.resource = User.find_by_email(params[:user][:email])
+    if (self.resource = User.find_by(email: params[:user][:email]))
       authorize resource
       flash[:alert] = "User already invited. If you want to, you can click 'Resend signup email'."
       respond_with resource, location: after_invite_path_for(resource)
@@ -27,8 +35,8 @@ class InvitationsController < Devise::InvitationsController
 
       self.resource = resource_class.invite!(resource_params, current_inviter)
       if resource.errors.empty?
-        grant_default_permissions(self.resource)
-        set_flash_message :notice, :send_instructions, email: self.resource.email
+        grant_default_permissions(resource)
+        set_flash_message :notice, :send_instructions, email: resource.email
         respond_with resource, location: after_invite_path_for(resource)
       else
         respond_with_navigational(resource) { render :new }
@@ -82,11 +90,15 @@ private
   # for details :)
   def unsanitised_user_params
     params.require(:user).permit(
-      :name, :email, :organisation_id,
-      :invitation_token, :password,
-      :password_confirmation, :require_2sv,
+      :name,
+      :email,
+      :organisation_id,
+      :invitation_token,
+      :password,
+      :password_confirmation,
+      :require_2sv,
       :role,
-      supported_permission_ids: []
+      supported_permission_ids: [],
     ).to_h
   end
 

@@ -53,6 +53,7 @@ private
 
   def prepare_and_validate
     redirect_to(:root) && return if current_user.nil?
+
     @limit = User::MAX_2SV_LOGIN_ATTEMPTS
     if current_user.max_2sv_login_attempts?
       sign_out(current_user)
@@ -68,7 +69,7 @@ private
     @otp_secret_key = params[:otp_secret_key]
     totp = ROTP::TOTP.new(@otp_secret_key)
     if totp.verify(params[:code], drift_behind: User::MAX_2SV_DRIFT_SECONDS)
-      current_user.update_attribute(:otp_secret_key, @otp_secret_key)
+      current_user.update!(otp_secret_key: @otp_secret_key)
       true
     else
       false

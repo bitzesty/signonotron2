@@ -8,7 +8,7 @@ class UserUpdate
     @user_ip = user_ip
   end
 
-  def update
+  def call
     user.skip_reconfirmation!
     old_permissions = fetch_user_permissions
     return unless update_user
@@ -32,7 +32,7 @@ private
   end
 
   def update_user
-    user.update_attributes(filtered_user_params)
+    user.update(filtered_user_params)
   end
 
   def record_permission_changes(old_permissions)

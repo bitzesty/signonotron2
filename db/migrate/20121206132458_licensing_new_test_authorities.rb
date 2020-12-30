@@ -1,4 +1,4 @@
-class LicensingNewTestAuthorities < ActiveRecord::Migration
+class LicensingNewTestAuthorities < ActiveRecord::Migration[5.1][5.0]
   def up
     unless licensing.nil?
       SupportedPermission.create(application: licensing, name: "gds-test-2")
@@ -14,6 +14,6 @@ class LicensingNewTestAuthorities < ActiveRecord::Migration
   end
 
   def licensing
-    @licensing ||= Doorkeeper::Application.find_by_name("Licensify")
+    @licensing ||= Doorkeeper::Application.find_by(name: "Licensify")
   end
 end

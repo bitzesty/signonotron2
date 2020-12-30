@@ -2,17 +2,20 @@
 # of editing this file, please use the migrations feature of Active Record to
 # incrementally modify your database, and then regenerate this schema definition.
 #
-# Note that this schema.rb definition is the authoritative source for your
-# database schema. If you need to create the application database on another
-# system, you should be using db:schema:load, not running all the migrations
-# from scratch. The latter is a flawed and unsustainable approach (the more migrations
-# you'll amass, the slower it'll run and the greater likelihood for issues).
+# This file is the source Rails uses to define your schema when running `rails
+# db:schema:load`. When creating a new database, `rails db:schema:load` tends to
+# be faster and is potentially less error prone than running all of your
+# migrations from scratch. Old migrations may fail to apply correctly if those
+# migrations use external dependencies or application code.
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_09_03_120837) do
+ActiveRecord::Schema.define(version: 2020_08_05_142418) do
 
-  create_table "batch_invitation_application_permissions", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
+  # These are extensions that must be enabled in order to support this database
+  enable_extension "plpgsql"
+
+  create_table "batch_invitation_application_permissions", id: :serial, force: :cascade do |t|
     t.integer "batch_invitation_id", null: false
     t.integer "supported_permission_id", null: false
     t.datetime "created_at", null: false
@@ -20,7 +23,7 @@ ActiveRecord::Schema.define(version: 2019_09_03_120837) do
     t.index ["batch_invitation_id", "supported_permission_id"], name: "index_batch_invite_app_perms_on_batch_invite_and_supported_perm", unique: true
   end
 
-  create_table "batch_invitation_users", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=latin1", force: :cascade do |t|
+  create_table "batch_invitation_users", id: :serial, force: :cascade do |t|
     t.integer "batch_invitation_id"
     t.string "name"
     t.string "email"
@@ -31,7 +34,7 @@ ActiveRecord::Schema.define(version: 2019_09_03_120837) do
     t.index ["batch_invitation_id"], name: "index_batch_invitation_users_on_batch_invitation_id"
   end
 
-  create_table "batch_invitations", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=latin1", force: :cascade do |t|
+  create_table "batch_invitations", id: :serial, force: :cascade do |t|
     t.text "applications_and_permissions"
     t.string "outcome"
     t.datetime "created_at", null: false
@@ -41,24 +44,25 @@ ActiveRecord::Schema.define(version: 2019_09_03_120837) do
     t.index ["outcome"], name: "index_batch_invitations_on_outcome"
   end
 
-  create_table "bulk_grant_permission_set_application_permissions", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
+  create_table "bulk_grant_permission_set_application_permissions", id: :serial, force: :cascade do |t|
     t.integer "bulk_grant_permission_set_id", null: false
     t.integer "supported_permission_id", null: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.index ["bulk_grant_permission_set_id", "supported_permission_id"], name: "index_app_permissions_on_bulk_grant_permission_set", unique: true
   end
 
-  create_table "bulk_grant_permission_sets", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
+  create_table "bulk_grant_permission_sets", id: :serial, force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "outcome"
     t.integer "processed_users", default: 0, null: false
     t.integer "total_users", default: 0, null: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_bulk_grant_permission_sets_on_user_id"
   end
 
-  create_table "event_logs", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
+  create_table "event_logs", id: :serial, force: :cascade do |t|
     t.string "uid"
     t.datetime "created_at", null: false
     t.integer "initiator_id"
@@ -73,20 +77,7 @@ ActiveRecord::Schema.define(version: 2019_09_03_120837) do
     t.index ["user_agent_id"], name: "event_logs_user_agent_id_fk"
   end
 
-  create_table "lhma_2019_04_29_13_15_20_064_event_logs", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
-    t.string "uid", null: false
-    t.datetime "created_at", null: false
-    t.integer "initiator_id"
-    t.integer "application_id"
-    t.string "trailing_message"
-    t.integer "event_id"
-    t.bigint "ip_address"
-    t.integer "user_agent_id"
-    t.index ["uid", "created_at"], name: "index_event_logs_on_uid_and_created_at"
-    t.index ["user_agent_id"], name: "event_logs_user_agent_id_fk"
-  end
-
-  create_table "oauth_access_grants", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
+  create_table "oauth_access_grants", id: :serial, force: :cascade do |t|
     t.integer "resource_owner_id", null: false
     t.integer "application_id", null: false
     t.string "token", null: false
@@ -94,11 +85,11 @@ ActiveRecord::Schema.define(version: 2019_09_03_120837) do
     t.string "redirect_uri", null: false
     t.datetime "created_at", null: false
     t.datetime "revoked_at"
-    t.string "scopes"
+    t.string "scopes", default: "", null: false
     t.index ["token"], name: "index_oauth_access_grants_on_token", unique: true
   end
 
-  create_table "oauth_access_tokens", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
+  create_table "oauth_access_tokens", id: :serial, force: :cascade do |t|
     t.integer "resource_owner_id", null: false
     t.integer "application_id", null: false
     t.string "token", null: false
@@ -112,8 +103,8 @@ ActiveRecord::Schema.define(version: 2019_09_03_120837) do
     t.index ["token"], name: "index_oauth_access_tokens_on_token", unique: true
   end
 
-  create_table "oauth_applications", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=latin1", force: :cascade do |t|
-    t.string "name"
+  create_table "oauth_applications", id: :serial, force: :cascade do |t|
+    t.string "name", null: false
     t.string "uid", null: false
     t.string "secret", null: false
     t.string "redirect_uri", null: false
@@ -129,7 +120,7 @@ ActiveRecord::Schema.define(version: 2019_09_03_120837) do
     t.index ["uid"], name: "index_oauth_applications_on_uid", unique: true
   end
 
-  create_table "old_passwords", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
+  create_table "old_passwords", id: :serial, force: :cascade do |t|
     t.string "encrypted_password", null: false
     t.string "password_salt"
     t.integer "password_archivable_id", null: false
@@ -138,7 +129,7 @@ ActiveRecord::Schema.define(version: 2019_09_03_120837) do
     t.index ["password_archivable_type", "password_archivable_id"], name: "index_password_archivable"
   end
 
-  create_table "organisations", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=latin1", force: :cascade do |t|
+  create_table "organisations", id: :serial, force: :cascade do |t|
     t.string "slug", null: false
     t.string "name", null: false
     t.string "organisation_type", null: false
@@ -153,11 +144,11 @@ ActiveRecord::Schema.define(version: 2019_09_03_120837) do
     t.index ["slug"], name: "index_organisations_on_slug", unique: true
   end
 
-  create_table "supported_permissions", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
+  create_table "supported_permissions", id: :serial, force: :cascade do |t|
     t.integer "application_id"
     t.string "name"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.boolean "delegatable", default: false
     t.boolean "grantable_from_ui", default: true, null: false
     t.boolean "default", default: false, null: false
@@ -165,12 +156,12 @@ ActiveRecord::Schema.define(version: 2019_09_03_120837) do
     t.index ["application_id"], name: "index_supported_permissions_on_application_id"
   end
 
-  create_table "user_agents", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
+  create_table "user_agents", id: :serial, force: :cascade do |t|
     t.string "user_agent_string", limit: 1000, null: false
-    t.index ["user_agent_string"], name: "index_user_agents_on_user_agent_string", length: 255
+    t.index ["user_agent_string"], name: "index_user_agents_on_user_agent_string"
   end
 
-  create_table "user_application_permissions", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
+  create_table "user_application_permissions", id: :serial, force: :cascade do |t|
     t.integer "user_id", null: false
     t.integer "application_id", null: false
     t.integer "supported_permission_id", null: false
@@ -180,10 +171,9 @@ ActiveRecord::Schema.define(version: 2019_09_03_120837) do
     t.index ["user_id", "application_id", "supported_permission_id"], name: "index_app_permissions_on_user_and_app_and_supported_permission", unique: true
   end
 
-  create_table "users", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
-    t.string "name", null: false
+  create_table "users", id: :serial, force: :cascade do |t|
     t.string "email", default: "", null: false
-    t.string "encrypted_password", default: ""
+    t.string "encrypted_password", limit: 255, default: ""
     t.string "reset_password_token"
     t.datetime "reset_password_sent_at"
     t.integer "sign_in_count", default: 0
@@ -191,18 +181,19 @@ ActiveRecord::Schema.define(version: 2019_09_03_120837) do
     t.datetime "last_sign_in_at"
     t.string "current_sign_in_ip"
     t.string "last_sign_in_ip"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.string "uid", null: false
     t.integer "failed_attempts", default: 0
     t.datetime "locked_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.datetime "suspended_at"
+    t.string "name", null: false
+    t.string "uid"
     t.string "invitation_token"
     t.datetime "invitation_sent_at"
     t.datetime "invitation_accepted_at"
     t.integer "invitation_limit"
-    t.integer "invited_by_id"
     t.string "invited_by_type"
+    t.integer "invited_by_id"
     t.string "reason_for_suspension"
     t.string "password_salt"
     t.string "confirmation_token"
@@ -217,16 +208,16 @@ ActiveRecord::Schema.define(version: 2019_09_03_120837) do
     t.datetime "invitation_created_at"
     t.string "otp_secret_key"
     t.integer "second_factor_attempts_count", default: 0
-    t.string "unlock_token"
     t.boolean "require_2sv", default: false, null: false
+    t.string "unlock_token"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["invitation_token"], name: "index_users_on_invitation_token"
     t.index ["invited_by_id"], name: "index_users_on_invited_by_id"
+    t.index ["invited_by_type", "invited_by_id"], name: "index_users_on_invited_by_type_and_invited_by_id"
     t.index ["organisation_id"], name: "index_users_on_organisation_id"
     t.index ["otp_secret_key"], name: "index_users_on_otp_secret_key", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
   end
 
-  add_foreign_key "event_logs", "user_agents", name: "event_logs_user_agent_id_fk"
 end

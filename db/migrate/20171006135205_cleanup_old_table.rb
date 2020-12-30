@@ -1,6 +1,6 @@
-class CleanupOldTable < ActiveRecord::Migration
+class CleanupOldTable < ActiveRecord::Migration[5.1][5.0]
   def up
-    drop_table "_event_logs_old"
+    # drop_table "_event_logs_old"
   end
 
   def down
