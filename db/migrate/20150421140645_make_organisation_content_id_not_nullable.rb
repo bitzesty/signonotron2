@@ -1,9 +1,9 @@
-class MakeOrganisationContentIdNotNullable < ActiveRecord::Migration[5.1][5.0]
-  class User < ActiveRecord::Base
+class MakeOrganisationContentIdNotNullable < ActiveRecord::Migration
+  class User < ApplicationRecord
     belongs_to :organisation
   end
 
-  class Organisation < ActiveRecord::Base
+  class Organisation < ApplicationRecord
     has_many :users
   end
 

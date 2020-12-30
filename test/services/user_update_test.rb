@@ -7,7 +7,7 @@ class UserUpdateTest < ActionView::TestCase
     current_user = create(:superadmin_user)
     ip_address = "1.2.3.4"
 
-    UserUpdate.new(affected_user, {}, current_user, ip_address).update
+    UserUpdate.new(affected_user, {}, current_user, ip_address).call
 
     assert_equal 1, EventLog.where(event_id: EventLog::ACCOUNT_UPDATED.id).count
   end
@@ -21,9 +21,9 @@ class UserUpdateTest < ActionView::TestCase
     app = create(:application, name: "App", with_supported_permissions: ["Editor", "signin", "Something Else"])
     affected_user.grant_application_permission(app, "Something Else")
 
-    perms = app.supported_permissions.first(2).map(&:id)
+    perms = app.supported_permissions.where(name: %w[Editor signin]).map(&:id)
     params = { supported_permission_ids: perms }
-    UserUpdate.new(affected_user, params, current_user, ip_address).update
+    UserUpdate.new(affected_user, params, current_user, ip_address).call
 
     add_event = EventLog.where(event_id: EventLog::PERMISSIONS_ADDED.id).last
     assert ["(Editor, signin)", "(signin, Editor)"].include?(add_event.trailing_message)

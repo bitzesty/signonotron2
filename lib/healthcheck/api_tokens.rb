@@ -44,23 +44,27 @@ module Healthcheck
 
     Record = Struct.new(:user_id, :application_id, :expires_in) do
       def critical?
-        expires_in < CRITICAL_THRESHOLD
+        value_of(expires_in) < CRITICAL_THRESHOLD
       end
 
       def user
-        User.find(user_id)
+        User.find value_of(user_id)
       end
 
       def application
-        Doorkeeper::Application.find(application_id)
+        Doorkeeper::Application.find value_of(application_id)
       end
 
       def expires_in_days
-        expires_in / 1.day.to_i
+        (value_of(expires_in) / 1.day.to_i).round - 1
       end
 
       def to_s
         "#{user.name} token for #{application.name} expires in #{expires_in_days} days"
+      end
+
+      def value_of(obj)
+        obj.is_a?(Array) ? obj.last : object_id
       end
     end
 

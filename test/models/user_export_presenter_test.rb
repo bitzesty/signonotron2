@@ -10,20 +10,31 @@ class UserExportPresenterTest < ActiveSupport::TestCase
     create(:supported_permission, application: @apps[2], name: "admin")
   end
 
-
   should "output header row including application names" do
     header_row = UserExportPresenter.new(@apps).header_row
 
     expected = [
-      "Name", "Email", "Role", "Organisation", "Sign-in count", "Last sign-in",
-      "Created", "Status", "2SV Status", "App 0", "App 1", "App 2", "App 3", "App 4"
+      "Name",
+      "Email",
+      "Role",
+      "Organisation",
+      "Sign-in count",
+      "Last sign-in",
+      "Created",
+      "Status",
+      "2SV Status",
+      "App 0",
+      "App 1",
+      "App 2",
+      "App 3",
+      "App 4",
     ]
     assert_equal(expected, header_row)
   end
 
   should "include sorted permissions for each application" do
     @user.grant_application_permissions(@apps[0], %w[editor])
-    @user.grant_application_permissions(@apps[2], %w(editor admin))
+    @user.grant_application_permissions(@apps[2], %w[editor admin])
 
     perms = UserExportPresenter.new(@apps).app_permissions_for(@user)
 

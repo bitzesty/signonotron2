@@ -8,9 +8,12 @@ en:
   mailer:
     app_name: "GOV.UK Signon %{instance_name}"
     email_from_address:
-      instance: "no-reply@tariff-email.bitzesty.com"
-      no-instance: "no-reply@tariff-email.bitzesty.com"
+      instance: "noreply-signon-%{instance_name}@%{reply_to_domain}"
+      no-instance: "noreply-signon@%{reply_to_domain}"
 
   noisy_batch_invitation_mailer:
-    to: "no-reply@tariff-email.bitzesty.com"
+    to: "signon-alerts@digital.cabinet-office.gov.uk"
 
+  support:
+    name: 'GOV.UK Support'
+    url: 'https://www.gov.uk/support/internal'

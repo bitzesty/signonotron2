@@ -1,13 +1,9 @@
 @import "govuk_publishing_components/all_components";
 
-// TODO: remove the font-face include when govuk_publishing_components doesn't
-// rely on govuk_template and has $govuk-compatibility-govuktemplate set to false
-@include _govuk-font-face-nta;
-
 // TODO: move into component
 .gem-c-success-alert,
 .gem-c-error-alert {
-  margin: 0 0 30px 0;
+  margin: 0 0 30px;
 }
 
 .gem-c-success-alert__message,
@@ -16,7 +12,7 @@
 }
 
 .app-application-list__item {
-  border-top: 1px solid #ccc;
+  border-top: 1px solid #cccccc;
   padding-top: 20px;
 }
 
@@ -57,6 +53,7 @@
   }
 }
 
+// stylelint-disable selector-max-id
 // TODO: replace IDs with `js-` prefixed classes as JavaScript selectors
 .not-strong-enough #password-guidance,
 .not-strong-enough #password-entropy,

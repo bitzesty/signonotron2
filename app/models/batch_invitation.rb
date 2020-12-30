@@ -1,4 +1,4 @@
-class BatchInvitation < ActiveRecord::Base
+class BatchInvitation < ApplicationRecord
   belongs_to :user
   belongs_to :organisation
   has_many :batch_invitation_users, -> { order(:name) }
@@ -22,17 +22,17 @@ class BatchInvitation < ActiveRecord::Base
 
   def enqueue
     NoisyBatchInvitation.make_noise(self).deliver_later
-    BatchInvitationJob.perform_later(self.id)
+    BatchInvitationJob.perform_later(id)
   end
 
   def perform(_options = {})
-    self.batch_invitation_users.unprocessed.each do |bi_user|
+    batch_invitation_users.unprocessed.each do |bi_user|
       bi_user.invite(user, supported_permission_ids)
     end
     self.outcome = "success"
-    self.save!
-  rescue StandardError => e
-    self.update_column(:outcome, "fail")
+    save!
+  rescue StandardError
+    update_column(:outcome, "fail")
     raise
   end
 

@@ -1,10 +1,10 @@
-class CreatePermissionsForLicensing < ActiveRecord::Migration[5.1][5.0]
-  class SupportedPermission < ActiveRecord::Base
+class CreatePermissionsForLicensing < ActiveRecord::Migration
+  class SupportedPermission < ApplicationRecord
     belongs_to :application, class_name: "Doorkeeper::Application"
   end
 
   def up
-    licensify = ::Doorkeeper::Application.find_by_name("Licensify")
+    licensify = ::Doorkeeper::Application.find_by(name: "Licensify")
     if licensify
       SupportedPermission.create!(application: licensify, name: "GDSAdministrator")
       SupportedPermission.create!(application: licensify, name: "AuthorityAdministrator")

@@ -11,7 +11,7 @@ class ApiAuthenticationTest < ActionDispatch::IntegrationTest
 
   setup do
     @app1 = create(:application, name: "MyApp", with_supported_permissions: %w[write])
-    @user = create(:user, with_permissions: { @app1 => %w(signin write) })
+    @user = create(:user, with_permissions: { @app1 => %w[signin write] })
     @user.authorisations.create!(application_id: @app1.id)
   end
 
@@ -19,7 +19,7 @@ class ApiAuthenticationTest < ActionDispatch::IntegrationTest
     access_user_endpoint(get_valid_token.token, client_id: @app1.uid)
 
     parsed_response = JSON.parse(response.body)
-    assert parsed_response.has_key?("user")
+    assert parsed_response.key?("user")
     assert parsed_response["user"]["permissions"].is_a?(Array)
   end
 
@@ -30,7 +30,7 @@ class ApiAuthenticationTest < ActionDispatch::IntegrationTest
     access_user_endpoint(get_valid_token.token)
 
     parsed_response = JSON.parse(response.body)
-    assert parsed_response.has_key?("user")
+    assert parsed_response.key?("user")
     assert parsed_response["user"]["permissions"].is_a?(Array)
   end
 

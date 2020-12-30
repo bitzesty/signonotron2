@@ -1,8 +1,8 @@
-class NoisyBatchInvitation < ActionMailer::Base
+class NoisyBatchInvitation < ApplicationMailer
   include MailerHelper
 
   default from: Proc.new { email_from }
-  default to: I18n.t("noisy_batch_invitation_mailer.to")
+  default to: Proc.new { email_to }
 
   def make_noise(batch_invitation)
     @user = batch_invitation.user
@@ -11,6 +11,6 @@ class NoisyBatchInvitation < ActionMailer::Base
     user_count = batch_invitation.batch_invitation_users.count
     subject = "[SIGNON] #{@user.name} created a batch of #{user_count} users"
     subject << " in #{instance_name}" if instance_name
-    mail(subject: subject)
+    view_mail(template_id, subject: subject)
   end
 end
